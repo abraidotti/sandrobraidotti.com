@@ -54,7 +54,6 @@
     "semi": 0
   },
   "env": {
-    "node": true,
     "es6": true,
     "browser": true
   },

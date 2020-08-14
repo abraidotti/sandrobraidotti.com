@@ -91,6 +91,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Your Name - [@sandy__beaches](https://twitter.com/sandy__beaches) - alessandro.braidotti@gmail.com
+[@sandy__beaches](https://twitter.com/sandy__beaches) - alessandro.braidotti@gmail.com
 
-Project Link: [https://github.com/abraidotti/sandrobraidotti.com](https://github.com/abraidotti/sandrobraidotti.com)
+[https://github.com/abraidotti/sandrobraidotti.com](https://github.com/abraidotti/sandrobraidotti.com)
