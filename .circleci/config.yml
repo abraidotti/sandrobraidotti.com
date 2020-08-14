@@ -7,23 +7,24 @@ jobs:
       - image: 'circleci/node:latest'
     steps:
       - checkout
+      - run: npm install
       - run:
-          name: "install packages"
-          command: npm install
-      - run:
-          name: "lint code"
+          name: "Lint code"
           command: |
             npm run lint
       - run:
-          name: "test code"
+          name: "Test code"
           command: |
             npm test
       - run:
           name: "Echo S3 bucket name"
-          command: echo $S3_Bucket_Name
+          command: echo S3_BUCKET_NAME
       - run:
-          name: "Echo S3 bucket name"
-          command: echo S3_Bucket_Name
+          name: "Echo S3 bucket name with dollar"
+          command: echo $S3_BUCKET_NAME
+      - run:
+          name: "Echo S3 bucket name with dollar and brackets"
+          command: echo ${S3_BUCKET_NAME}
       # - aws-s3/sync:
       #     arguments: |
       #       --acl public-read \
