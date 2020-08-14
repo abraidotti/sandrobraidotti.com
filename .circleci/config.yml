@@ -22,4 +22,4 @@ jobs:
       - aws-s3/sync:
           from: build
           overwrite: true
-          to: '$S3_BUCKET_NAME'
+          to: s3://sandrobraidotti.com
