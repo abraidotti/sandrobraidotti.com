@@ -23,6 +23,9 @@ jobs:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_REGION
-          from: build
+          from: bucket
           overwrite: true
-          to: '$S3_BUCKET_NAME'
+          to: $S3_BUCKET_NAME
+      - aws-s3/copy:
+          from: build
+          to: $S3_BUCKET_NAME
