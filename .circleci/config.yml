@@ -7,35 +7,22 @@ jobs:
       - image: 'circleci/node:latest'
     steps:
       - checkout
-      - run: npm install
+      - run:
+          name: "Install"
+          command: npm install
       - run:
           name: "Lint code"
-          command: |
-            npm run lint
+          command: npm run lint
       - run:
           name: "Test code"
-          command: |
-            npm test
+          command: npm test
       - run:
-          name: "Echo S3 bucket name"
-          command: echo S3_BUCKET_NAME
-      - run:
-          name: "Echo S3 bucket name with dollar"
-          command: echo $S3_BUCKET_NAME
-      - run:
-          name: "Echo S3 bucket name with dollar and brackets"
-          command: echo ${S3_BUCKET_NAME}
-      # - aws-s3/sync:
-      #     arguments: |
-      #       --acl public-read \
-      #       --cache-control "max-age=86400"
-      #     aws-access-key-id: AWS_ACCESS_KEY_ID_BLUE
-      #     aws-region: AWS_REGION_BLUE
-      #     aws-secret-access-key: AWS_SECRET_ACCESS_KEY_BLUE
-      #     from: bucket
-      #     overwrite: true
-      #     to: 's3://my-s3-bucket-name/prefix'
-      # - aws-s3/copy:
-      #     arguments: '--dryrun'
-      #     from: bucket/build_asset.txt
-      #     to: 's3://my-s3-bucket-name'
+          name: "Build"
+          command: npm build
+      - aws-s3/sync:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_REGION
+          from: build
+          overwrite: true
+          to: '$S3_BUCKET_NAME'
