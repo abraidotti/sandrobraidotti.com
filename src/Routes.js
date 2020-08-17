@@ -11,6 +11,9 @@ import {
   Typography as TypographyView,
   Icons as IconsView,
   Account as AccountView,
+  Auth as AuthView,
+  DeAuth as DeAuthView,
+  Privacy as PrivacyView,
   Settings as SettingsView,
   SignUp as SignUpView,
   SignIn as SignInView,
@@ -62,6 +65,24 @@ const Routes = () => {
         path="/account"
       />
       <RouteWithLayout
+        component={AuthView}
+        exact
+        layout={MainLayout}
+        path="/auth"
+      />
+      <RouteWithLayout
+        component={DeAuthView}
+        exact
+        layout={MainLayout}
+        path="/deauth"
+      />
+      <RouteWithLayout
+        component={PrivacyView}
+        exact
+        layout={MainLayout}
+        path="/privacy"
+      />
+      <RouteWithLayout
         component={SettingsView}
         exact
         layout={MainLayout}
@@ -76,7 +97,7 @@ const Routes = () => {
       <RouteWithLayout
         component={SignInView}
         exact
-        layout={MinimalLayout}
+        layout={MainLayout}
         path="/sign-in"
       />
       <RouteWithLayout
