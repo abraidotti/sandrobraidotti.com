@@ -6,8 +6,7 @@ import {
   Budget,
   TotalUsers,
   TotalProfit,
-  LatestProducts,
-  LatestOrders
+  LatestProducts
 } from './components';
 
 const useStyles = makeStyles(theme => ({
@@ -60,15 +59,6 @@ const Dashboard = () => {
           xs={12}
         >
           <LatestProducts />
-        </Grid>
-        <Grid
-          item
-          lg={8}
-          md={12}
-          xl={9}
-          xs={12}
-        >
-          <LatestOrders />
         </Grid>
       </Grid>
     </div>

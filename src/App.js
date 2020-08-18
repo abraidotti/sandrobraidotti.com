@@ -1,6 +1,6 @@
 import React from 'react';
 import { Router } from 'react-router-dom';
-import { useAuth0 } from '@auth0/auth0-react';
+// import { useAuth0 } from '@auth0/auth0-react';
 
 import { Chart } from 'react-chartjs-2';
 import { ThemeProvider } from '@material-ui/styles';
@@ -25,9 +25,7 @@ validate.validators = {
 };
 
 const App = () => {
-  const { user, isAuthenticated, isLoading } = useAuth0();
-
-  console.log(user, isAuthenticated, isLoading);
+  // const { user, isAuthenticated, isLoading } = useAuth0();
 
   return (
     <ThemeProvider theme={theme}>

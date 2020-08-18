@@ -6,7 +6,6 @@ export { default as Meta } from './Meta';
 export { default as News } from './News';
 export { default as NotFound } from './NotFound';
 export { default as Privacy } from './Privacy';
-export { default as ProductList } from './ProductList';
 export { default as Projects } from './Projects';
 export { default as Settings } from './Settings';
 export { default as SignIn } from './SignIn';

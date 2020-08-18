@@ -2,7 +2,6 @@ import React from 'react';
 import { makeStyles } from '@material-ui/styles';
 import { Grid } from '@material-ui/core';
 import { MetaStub } from './components';
-import { LatestTodos } from './components';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -27,15 +26,6 @@ const Meta = () => {
           xs={12}
         >
           <MetaStub />
-        </Grid>
-        <Grid
-          item
-          lg={8}
-          md={12}
-          xl={9}
-          xs={12}
-        >
-          <LatestTodos />
         </Grid>
       </Grid>
     </div>
