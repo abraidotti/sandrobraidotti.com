@@ -1,6 +1,7 @@
 export { default as AboutMe } from './AboutMe';
 export { default as Account } from './Account';
 export { default as Dashboard } from './Dashboard';
+export { default as Home } from './Home';
 export { default as Icons } from './Icons';
 export { default as Meta } from './Meta';
 export { default as News } from './News';

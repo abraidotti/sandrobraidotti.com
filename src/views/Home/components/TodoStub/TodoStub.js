@@ -21,7 +21,7 @@ const useStyles = makeStyles({
   }
 });
 
-const ProjectStub = () => {
+const TodoStub = () => {
   const classes = useStyles();
 
   return (
@@ -32,28 +32,35 @@ const ProjectStub = () => {
           color="textSecondary"
           gutterBottom
         >
-          Project Stub
+          Todos
         </Typography>
         <Typography
           component="h2"
           variant="h5"
         >
-          Project stub
+          Todos
         </Typography>
         <Typography
           className={classes.pos}
           color="textSecondary"
         >
-          Nothing here yet. Otherwise, please check out my 
-          <a
-            href="https://www.github.com/abraidotti"
-            rel="noopener noreferrer"
-            target="_blank"
-          > github profile</a>.
+          1: Fix up colors, images, and styling
+        </Typography>
+        <Typography
+          className={classes.pos}
+          color="textSecondary"
+        >
+          2: Fix authentication and private routes
+        </Typography>
+        <Typography
+          className={classes.pos}
+          color="textSecondary"
+        >
+          3: Start using github issues for todos and delete this thing
         </Typography>
       </CardContent>
     </Card>
   );
 };
 
-export default ProjectStub;
+export default TodoStub;

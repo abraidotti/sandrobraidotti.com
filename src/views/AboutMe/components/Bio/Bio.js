@@ -21,7 +21,7 @@ const useStyles = makeStyles({
   }
 });
 
-const Policy = () => {
+const Bio = () => {
   const classes = useStyles();
 
   return (
@@ -51,4 +51,4 @@ const Policy = () => {
   );
 };
 
-export default Policy;
+export default Bio;

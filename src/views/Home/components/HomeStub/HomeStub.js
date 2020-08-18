@@ -21,7 +21,7 @@ const useStyles = makeStyles({
   }
 });
 
-const ProjectStub = () => {
+const HomeStub = () => {
   const classes = useStyles();
 
   return (
@@ -32,28 +32,29 @@ const ProjectStub = () => {
           color="textSecondary"
           gutterBottom
         >
-          Project Stub
+          Home
         </Typography>
         <Typography
           component="h2"
           variant="h5"
         >
-          Project stub
+          08/16/2020
         </Typography>
         <Typography
           className={classes.pos}
           color="textSecondary"
         >
-          Nothing here yet. Otherwise, please check out my 
-          <a
-            href="https://www.github.com/abraidotti"
-            rel="noopener noreferrer"
-            target="_blank"
-          > github profile</a>.
+          Hi! Please stay tuned as I make more site updates. I have cool things planned.
+        </Typography>
+        <Typography
+          className={classes.pos}
+          color="textSecondary"
+        >
+          Authorization (top right) mostly works but doesn't do much at the moment.
         </Typography>
       </CardContent>
     </Card>
   );
 };
 
-export default ProjectStub;
+export default HomeStub;

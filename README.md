@@ -37,6 +37,8 @@ React, testing
 
 CI/CD, terraform, ...testing
 
+![CircleCI](https://img.shields.io/circleci/build/github/abraidotti/sandrobraidotti.com/master)
+
 ## API
 
 Serverless, Dynamodb, testing
