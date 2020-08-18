@@ -5,14 +5,15 @@ import { RouteWithLayout } from './components';
 import { Main as MainLayout, Minimal as MinimalLayout } from './layouts';
 
 import {
+  AboutMe as AboutMeView,
   Dashboard as DashboardView,
   ProductList as ProductListView,
   UserList as UserListView,
   Typography as TypographyView,
   Icons as IconsView,
-  Account as AccountView,
-  Auth as AuthView,
-  DeAuth as DeAuthView,
+  Meta as MetaView,
+  News as NewsView,
+  Projects as ProjectsView,
   Privacy as PrivacyView,
   Settings as SettingsView,
   SignUp as SignUpView,
@@ -23,16 +24,22 @@ import {
 const Routes = () => {
   return (
     <Switch>
-      <Redirect
+      {/* <Redirect
         exact
         from="/"
         to="/dashboard"
-      />
+      /> */}
       <RouteWithLayout
         component={DashboardView}
         exact
         layout={MainLayout}
-        path="/dashboard"
+        path="/"
+      />
+      <RouteWithLayout
+        component={AboutMeView}
+        exact
+        layout={MainLayout}
+        path="/aboutme"
       />
       <RouteWithLayout
         component={UserListView}
@@ -59,22 +66,22 @@ const Routes = () => {
         path="/icons"
       />
       <RouteWithLayout
-        component={AccountView}
+        component={MetaView}
         exact
         layout={MainLayout}
-        path="/account"
+        path="/meta"
       />
       <RouteWithLayout
-        component={AuthView}
+        component={NewsView}
         exact
         layout={MainLayout}
-        path="/auth"
+        path="/news"
       />
       <RouteWithLayout
-        component={DeAuthView}
+        component={ProjectsView}
         exact
         layout={MainLayout}
-        path="/deauth"
+        path="/projects"
       />
       <RouteWithLayout
         component={PrivacyView}

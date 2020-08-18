@@ -1,11 +1,13 @@
+export { default as AboutMe } from './AboutMe';
 export { default as Account } from './Account';
-export { default as Auth } from './Auth';
-export { default as DeAuth } from './DeAuth';
 export { default as Dashboard } from './Dashboard';
 export { default as Icons } from './Icons';
+export { default as Meta } from './Meta';
+export { default as News } from './News';
 export { default as NotFound } from './NotFound';
 export { default as Privacy } from './Privacy';
 export { default as ProductList } from './ProductList';
+export { default as Projects } from './Projects';
 export { default as Settings } from './Settings';
 export { default as SignIn } from './SignIn';
 export { default as SignUp } from './SignUp';

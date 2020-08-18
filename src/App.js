@@ -25,9 +25,9 @@ validate.validators = {
 };
 
 const App = () => {
-  const { user, isAuthenticated} = useAuth0();
-  console.log('user in App.js: ', user)
-  console.log('is Authenticated? ', isAuthenticated)
+  const { user, isAuthenticated, isLoading } = useAuth0();
+
+  console.log(user, isAuthenticated, isLoading);
 
   return (
     <ThemeProvider theme={theme}>

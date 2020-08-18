@@ -1,8 +1,7 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/styles';
 import { Grid } from '@material-ui/core';
-
-import { LogoutButton } from './components';
+import { Newspaper } from './components';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -10,7 +9,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const DeAuth = () => {
+const News = () => {
   const classes = useStyles();
 
   return (
@@ -26,11 +25,11 @@ const DeAuth = () => {
           xl={4}
           xs={12}
         >
-          <LogoutButton />
+          <Newspaper />
         </Grid>
       </Grid>
     </div>
   );
 };
 
-export default DeAuth;
+export default News;

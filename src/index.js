@@ -5,11 +5,9 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import * as serviceWorker from './serviceWorker';
 import history from './utils/history';
 
-const onRedirectCallback = (appState) => {
+const onRedirectCallback = appState => {
   history.push(
-    appState && appState.returnTo
-      ? appState.returnTo
-      : window.location.pathname
+    appState && appState.returnTo ? appState.returnTo : window.location.pathname
   );
 };
 

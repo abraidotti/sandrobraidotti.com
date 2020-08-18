@@ -4,6 +4,8 @@ import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/styles';
 import { Avatar, Typography } from '@material-ui/core';
+import { useAuth0 } from '@auth0/auth0-react';
+
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -26,11 +28,24 @@ const Profile = props => {
 
   const classes = useStyles();
 
-  const user = {
-    name: 'Shen Zhi',
-    avatar: '/images/avatars/avatar_11.png',
-    bio: 'Brain Director'
-  };
+  const { user, isAuthenticated } = useAuth0();
+
+  let userInfo;
+
+  if (isAuthenticated) {
+    userInfo = {
+      name: user.nickname,
+      avatar: user.picture,
+      bio: user.email
+    };
+  } else {
+    userInfo = {
+      name: 'Sandro Braidotti',
+      avatar: '/images/sandro-square.jpg',
+      bio: 'Keyboard Masher'
+    };
+    
+  }
 
   return (
     <div
@@ -41,16 +56,16 @@ const Profile = props => {
         alt="Person"
         className={classes.avatar}
         component={RouterLink}
-        src={user.avatar}
-        to="/settings"
+        src={userInfo.avatar}
+        to="/aboutme"
       />
       <Typography
         className={classes.name}
         variant="h4"
       >
-        {user.name}
+        {userInfo.name}
       </Typography>
-      <Typography variant="body2">{user.bio}</Typography>
+      <Typography variant="body2">{userInfo.bio}</Typography>
     </div>
   );
 };

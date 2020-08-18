@@ -1,8 +1,8 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/styles';
 import { Grid } from '@material-ui/core';
-
-import { LoginButton } from './components';
+import { MetaStub } from './components';
+import { LatestTodos } from './components';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -10,7 +10,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Auth = () => {
+const Meta = () => {
   const classes = useStyles();
 
   return (
@@ -22,15 +22,24 @@ const Auth = () => {
         <Grid
           item
           lg={4}
-          md={6}
+          md={4}
           xl={4}
           xs={12}
         >
-          <LoginButton />
+          <MetaStub />
+        </Grid>
+        <Grid
+          item
+          lg={8}
+          md={12}
+          xl={9}
+          xs={12}
+        >
+          <LatestTodos />
         </Grid>
       </Grid>
     </div>
   );
 };
 
-export default Auth;
+export default Meta;

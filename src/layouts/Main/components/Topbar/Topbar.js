@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/styles';
-import { AppBar, Toolbar, Badge, Hidden, IconButton } from '@material-ui/core';
+import {
+  AppBar,
+  Toolbar,
+  Hidden,
+  IconButton,
+  Typography
+} from '@material-ui/core';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import MenuIcon from '@material-ui/icons/Menu';
-import NotificationsIcon from '@material-ui/icons/NotificationsOutlined';
-import InputIcon from '@material-ui/icons/Input';
+import PersonIcon from '@material-ui/icons/Person';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -15,7 +22,7 @@ const useStyles = makeStyles(theme => ({
   flexGrow: {
     flexGrow: 1
   },
-  signOutButton: {
+  authButton: {
     marginLeft: theme.spacing(1)
   },
   logo: {
@@ -28,7 +35,7 @@ const Topbar = props => {
 
   const classes = useStyles();
 
-  const [notifications] = useState([]);
+  const { isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
   return (
     <AppBar
@@ -37,29 +44,34 @@ const Topbar = props => {
     >
       <Toolbar>
         <RouterLink to="/">
-          <img 
-            alt="Logo"
-            className={classes.logo}
-            src="/images/logos/sandro-logo.png"
-          />
+          <Typography
+            className={classes.flexGrow}
+            color="textSecondary"
+            variant="h2"
+          >
+            Sandro Braidotti
+          </Typography>
         </RouterLink>
         <div className={classes.flexGrow} />
         <Hidden mdDown>
-          <IconButton color="inherit">
-            <Badge
-              badgeContent={notifications.length}
-              color="primary"
-              variant="dot"
+          {!isAuthenticated && (
+            <IconButton
+              className={classes.authButton}
+              color="inherit"
+              onClick={() => loginWithRedirect()}
             >
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-          <IconButton
-            className={classes.signOutButton}
-            color="inherit"
-          >
-            <InputIcon />
-          </IconButton>
+              <PersonIcon />
+            </IconButton>
+          )}
+          {isAuthenticated && (
+            <IconButton
+              className={classes.authButton}
+              color="inherit"
+              onClick={() => logout({ returnTo: window.location.origin })}
+            >
+              <ExitToAppIcon />
+            </IconButton>
+          )}
         </Hidden>
         <Hidden lgUp>
           <IconButton

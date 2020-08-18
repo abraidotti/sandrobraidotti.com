@@ -3,11 +3,12 @@ import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/styles';
 import { Divider, Drawer } from '@material-ui/core';
-import DashboardIcon from '@material-ui/icons/Dashboard';
-import LockIcon from '@material-ui/icons/Lock';
-import LockOpenIcon from '@material-ui/icons/LockOpen';
+import AnnouncementIcon from '@material-ui/icons/Announcement';
+import CodeIcon from '@material-ui/icons/Code';
+import HomeIcon from '@material-ui/icons/Home';
+import TableChartIcon from '@material-ui/icons/TableChart';
 
-import { Profile, SidebarNav, UpgradePlan } from './components';
+import { Profile, SidebarNav } from './components';
 
 const useStyles = makeStyles(theme => ({
   drawer: {
@@ -39,20 +40,25 @@ const Sidebar = props => {
 
   const pages = [
     {
-      title: 'Dashboard',
-      href: '/dashboard',
-      icon: <DashboardIcon />
+      title: 'Home',
+      href: '/',
+      icon: <HomeIcon />
     },
     {
-      title: 'Auth',
-      href: '/auth',
-      icon: <LockIcon />
+      title: 'Projects',
+      href: '/projects',
+      icon: <CodeIcon />
     },
     {
-      title: 'DeAuth',
-      href: '/deauth',
-      icon: <LockOpenIcon />
-    }
+      title: 'News',
+      href: '/news',
+      icon: <AnnouncementIcon />
+    },
+    {
+      title: 'Meta',
+      href: '/meta',
+      icon: <TableChartIcon />
+    },
   ];
 
   return (
@@ -73,7 +79,6 @@ const Sidebar = props => {
           className={classes.nav}
           pages={pages}
         />
-        <UpgradePlan />
       </div>
     </Drawer>
   );
