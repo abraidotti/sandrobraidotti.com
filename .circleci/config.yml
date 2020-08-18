@@ -17,6 +17,11 @@ jobs:
           name: "Test code"
           command: npm test
       - run:
+          name: Setup Environment Variables
+          command: |
+            echo "export REACT_APP_AUTH0_DOMAIN=$REACT_APP_AUTH0_DOMAIN" >> $BASH_ENV
+            echo "export REACT_APP_AUTH0_CLIENT_ID=$REACT_APP_AUTH0_CLIENT_ID" >> $BASH_ENV
+      - run:
           name: "Build"
           command: npm run-script build
       - aws-s3/sync:
