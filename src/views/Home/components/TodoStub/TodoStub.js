@@ -1,8 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import Typography from '@material-ui/core/Typography';
+import { Button, Card, CardContent, Typography  } from '@material-ui/core';
 
 const useStyles = makeStyles({
   root: {
@@ -35,28 +33,25 @@ const TodoStub = () => {
           Todos
         </Typography>
         <Typography
-          component="h2"
-          variant="h5"
+          className={classes.pos}
+          color="textSecondary"
         >
-          Todos
+          <Button
+            color="primary"
+            disableElevation
+            href="https://github.com/abraidotti/sandrobraidotti.com/projects/1"
+            target="_blank"
+            variant="contained"
+          >
+            Open the kanban board
+          </Button>
         </Typography>
         <Typography
           className={classes.pos}
           color="textSecondary"
+          variant="caption"
         >
-          1: Fix up colors, images, and styling
-        </Typography>
-        <Typography
-          className={classes.pos}
-          color="textSecondary"
-        >
-          2: Fix authentication and private routes
-        </Typography>
-        <Typography
-          className={classes.pos}
-          color="textSecondary"
-        >
-          3: Start using github issues for todos and delete this thing
+          I assure you I will fix up this site's colors and styles soon.
         </Typography>
       </CardContent>
     </Card>
