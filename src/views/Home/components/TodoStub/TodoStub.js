@@ -1,6 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button, Card, CardContent, Typography  } from '@material-ui/core';
+import { Button, Card, CardContent, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles({
   root: {
@@ -10,9 +10,6 @@ const useStyles = makeStyles({
     display: 'inline-block',
     margin: '0 2px',
     transform: 'scale(0.8)'
-  },
-  title: {
-    fontSize: 14
   },
   pos: {
     marginBottom: 12
@@ -26,16 +23,13 @@ const TodoStub = () => {
     <Card className={classes.root}>
       <CardContent>
         <Typography
-          className={classes.title}
-          color="textSecondary"
+          component="h2"
           gutterBottom
+          variant="h5"
         >
           Todos
         </Typography>
-        <Typography
-          className={classes.pos}
-          color="textSecondary"
-        >
+        <Typography color="textSecondary">
           <Button
             color="primary"
             disableElevation
@@ -45,13 +39,6 @@ const TodoStub = () => {
           >
             Open the kanban board
           </Button>
-        </Typography>
-        <Typography
-          className={classes.pos}
-          color="textSecondary"
-          variant="caption"
-        >
-          I assure you I will fix up this site's colors and styles soon.
         </Typography>
       </CardContent>
     </Card>

@@ -44,7 +44,7 @@ const Newspaper = () => {
           className={classes.pos}
           color="textSecondary"
         >
-          Updates will go here
+          Updates will go here.
         </Typography>
       </CardContent>
     </Card>
