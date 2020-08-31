@@ -1,12 +1,8 @@
-import React, { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
-import { issues as issuesAtom } from '../atoms';
-import { graphql } from '@octokit/graphql';
-
+import React from 'react';
+import { useRecoilValue } from 'recoil';
+import { fetchIssues } from '../selectors';
 import { makeStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import Typography from '@material-ui/core/Typography';
+import { Card, CardContent, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles({
   root: {
@@ -25,44 +21,24 @@ const useStyles = makeStyles({
   }
 });
 
-const graphqlWithAuth = graphql.defaults({
-  headers: {
-    authorization: `token ${process.env.REACT_APP_GITHUB_PERSONAL_TOKEN}`
-  }
-});
+const IssueList = () => {
+  const classes = useStyles();
+  const issues = useRecoilValue(fetchIssues);
+
+  return issues.map(issue => (
+    <Typography
+      className={classes.title}
+      color="textSecondary"
+      gutterBottom
+      key={`issue-${issue.node.number}`}
+    >
+      {issue.node.title}
+    </Typography>
+  ));
+};
 
 const Issues = () => {
   const classes = useStyles();
-
-  const [issues, setIssues] = useRecoilState(issuesAtom);
-
-  useEffect(() => {
-    const getIssues = async () => {
-      const issuesData = await graphqlWithAuth(
-        `
-          {
-            repository(owner: "abraidotti", name: "sandrobraidotti.com") {
-              id
-              issues(first: 10, states: OPEN) {
-                edges {
-                  node {
-                    number
-                    title
-                    url
-                  }
-                }
-              }
-            }
-          }
-        `
-      );
-      const { edges } = issuesData.repository.issues
-      setIssues(edges);
-    };
-    getIssues();
-  }, [setIssues]);
-
-  
 
   return (
     <Card className={classes.root}>
@@ -71,22 +47,11 @@ const Issues = () => {
           component="h5"
           variant="h5"
         >
-            Open issues
+          Open issues
         </Typography>
-        {issues && issues.map((issue) => (
-          <Typography
-            className={classes.title}
-            color="textSecondary"
-            gutterBottom
-            key={`issue-${issue.node.number}`}
-          >
-            {issue.node.title}
-          </Typography>
-        ))}
-        {!issues &&
-          <p>No issues found.</p>
-        }
-        
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <IssueList />
+        </React.Suspense>
       </CardContent>
     </Card>
   );

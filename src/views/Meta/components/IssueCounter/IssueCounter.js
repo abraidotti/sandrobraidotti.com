@@ -1,11 +1,9 @@
+/* eslint-disable react/no-multi-comp */
 import React from 'react';
-import { useRecoilState } from 'recoil';
-import { issues as issuesAtom } from '../atoms';
-
+import { useRecoilValue } from 'recoil';
+import { fetchIssues } from '../selectors';
 import { makeStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import Typography from '@material-ui/core/Typography';
+import { Card, CardContent, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles({
   root: {
@@ -24,12 +22,23 @@ const useStyles = makeStyles({
   }
 });
 
+const IssueList = () => {
+  const classes = useStyles();
+  const issues = useRecoilValue(fetchIssues);
 
+  return (
+    <Typography
+      className={classes.title}
+      color="textSecondary"
+      gutterBottom
+    >
+      {issues.length}
+    </Typography>
+  )
+};
 
 const IssueCounter = () => {
   const classes = useStyles();
-
-  const [issues] = useRecoilState(issuesAtom);
 
   return (
     <Card className={classes.root}>
@@ -38,19 +47,11 @@ const IssueCounter = () => {
           component="h5"
           variant="h5"
         >
-           Total issues:
+          Open issues
         </Typography>
-        {issues && 
-          <Typography
-            className={classes.title}
-            color="textSecondary"
-            gutterBottom
-          >
-            {issues.length}
-          </Typography>
-        }
-        
-        
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <IssueList />
+        </React.Suspense>
       </CardContent>
     </Card>
   );
