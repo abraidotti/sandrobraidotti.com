@@ -4,6 +4,7 @@ import App from './App';
 import { Auth0Provider } from '@auth0/auth0-react';
 import * as serviceWorker from './serviceWorker';
 import history from './utils/history';
+import { RecoilRoot } from 'recoil';
 
 const onRedirectCallback = appState => {
   history.push(
@@ -18,7 +19,9 @@ ReactDOM.render(
     onRedirectCallback={onRedirectCallback}
     redirectUri={window.location.origin}
   >
-    <App />
+    <RecoilRoot>
+      <App />
+    </RecoilRoot>
   </Auth0Provider>,
   document.getElementById('root')
 );
