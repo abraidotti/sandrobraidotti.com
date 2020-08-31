@@ -1,7 +1,7 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/styles';
 import { Grid } from '@material-ui/core';
-import { Issues, MetaStub } from './components';
+import { IssueCounter, Issues, MetaStub } from './components';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -35,6 +35,15 @@ const Meta = () => {
           xs={12}
         >
           <Issues />
+        </Grid>
+        <Grid
+          item
+          lg={4}
+          md={4}
+          xl={4}
+          xs={12}
+        >
+          <IssueCounter />
         </Grid>
       </Grid>
     </div>

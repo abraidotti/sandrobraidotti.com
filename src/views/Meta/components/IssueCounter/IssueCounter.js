@@ -1,4 +1,7 @@
 import React from 'react';
+import { useRecoilState } from 'recoil';
+import { issues as issuesAtom } from '../atoms';
+
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
@@ -21,34 +24,36 @@ const useStyles = makeStyles({
   }
 });
 
-const MetaStub = () => {
+
+
+const IssueCounter = () => {
   const classes = useStyles();
+
+  const [issues] = useRecoilState(issuesAtom);
 
   return (
     <Card className={classes.root}>
       <CardContent>
         <Typography
-          className={classes.title}
-          color="textSecondary"
-          gutterBottom
-        >
-          Meta
-        </Typography>
-        <Typography
-          component="h2"
+          component="h5"
           variant="h5"
         >
-          Site analytics!
+           Total issues:
         </Typography>
-        <Typography
-          className={classes.pos}
-          color="textSecondary"
-        >
-          Powered by Github's GraphQL API and managed with React Recoil.
-        </Typography>
+        {issues && 
+          <Typography
+            className={classes.title}
+            color="textSecondary"
+            gutterBottom
+          >
+            {issues.length}
+          </Typography>
+        }
+        
+        
       </CardContent>
     </Card>
   );
 };
 
-export default MetaStub;
+export default IssueCounter;

@@ -57,15 +57,39 @@ const Issues = () => {
         `
       );
       const { edges } = issuesData.repository.issues
-      console.log(edges);
       setIssues(edges);
     };
-
     getIssues();
-    console.log(issues);
-  }, []);
+  }, [setIssues]);
 
-  return <p>test</p>;
+  
+
+  return (
+    <Card className={classes.root}>
+      <CardContent>
+        <Typography
+          component="h5"
+          variant="h5"
+        >
+            Open issues
+        </Typography>
+        {issues && issues.map((issue) => (
+          <Typography
+            className={classes.title}
+            color="textSecondary"
+            gutterBottom
+            key={`issue-${issue.node.number}`}
+          >
+            {issue.node.title}
+          </Typography>
+        ))}
+        {!issues &&
+          <p>No issues found.</p>
+        }
+        
+      </CardContent>
+    </Card>
+  );
 };
 
 export default Issues;
