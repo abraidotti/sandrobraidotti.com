@@ -61,7 +61,7 @@ export const fetchProject = selector({
       }
         `
     );
-    const { project } = projectData.repository
+    const { project } = projectData.repository;
     const totalCards = project.columns.nodes
       .map(node => node.cards.totalCount)
       .reduce((a, b) => a + b, 0);

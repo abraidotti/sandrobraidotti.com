@@ -38,7 +38,7 @@ const MetaStub = () => {
           component="h2"
           variant="h5"
         >
-          Site analytics!
+          Site analytics
         </Typography>
         <Typography
           className={classes.pos}

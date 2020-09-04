@@ -14,11 +14,11 @@ import {
   Divider,
   Typography
 } from '@material-ui/core';
-import LinkIcon from '@material-ui/icons/Link';
+import DoneIcon from '@material-ui/icons/Done';
+import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
 import EmojiObjectsIcon from '@material-ui/icons/EmojiObjects';
 import ForwardIcon from '@material-ui/icons/Forward';
-import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
-import DoneIcon from '@material-ui/icons/Done';
+import LinkIcon from '@material-ui/icons/Link';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -33,11 +33,10 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
     justifyContent: 'space-between'
   },
-  device: {
-    textAlign: 'center',
-    padding: theme.spacing(1)
+  section: {
+    textAlign: 'center'
   },
-  deviceIcon: {
+  sectionIcon: {
     color: theme.palette.icon
   }
 }));
@@ -92,17 +91,17 @@ const IssueCounter = props => {
     };
 
     const iconNames = [
-      <EmojiObjectsIcon/>,
-      <ForwardIcon/>,
-      <DoubleArrowIcon/>,
-      <DoneIcon/>
+      <EmojiObjectsIcon />,
+      <ForwardIcon />,
+      <DoubleArrowIcon />,
+      <DoneIcon />
     ];
 
-    const colors = [
+    const iconColors = [
       theme.palette.primary.main,
       theme.palette.error.main,
       theme.palette.warning.main,
-      theme.palette.text.secondary,
+      theme.palette.text.secondary
     ];
 
     const sections = project.columns.nodes.map((node, index) => {
@@ -110,7 +109,7 @@ const IssueCounter = props => {
         title: node.name,
         value: node.cards.totalCount,
         icon: iconNames[index],
-        color: colors[index]
+        color: iconColors[index]
       };
     });
 
@@ -141,7 +140,7 @@ const IssueCounter = props => {
             />
           </div>
           <div className={classes.stats}>
-            {sections.map( (section) => (
+            {sections.map(section => (
               <div
                 className={classes.section}
                 key={section.title}

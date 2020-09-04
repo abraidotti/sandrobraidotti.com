@@ -32,10 +32,10 @@ const useStyles = makeStyles({
   }
 });
 
-const Issues = () => {
+const IssueList = () => {
   const classes = useStyles();
 
-  const IssueList = () => {
+  const IssueListItems = () => {
     const issues = useRecoilValue(fetchIssues);
 
     return issues.map(issue => (
@@ -73,7 +73,7 @@ const Issues = () => {
       <CardContent>
         <List className={classes.list}>
           <React.Suspense fallback={<div>Loading...</div>}>
-            <IssueList />
+            <IssueListItems />
           </React.Suspense>
         </List>
       </CardContent>
@@ -81,4 +81,4 @@ const Issues = () => {
   );
 };
 
-export default Issues;
+export default IssueList;
