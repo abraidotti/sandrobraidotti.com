@@ -8,6 +8,7 @@ import {
   AboutMe as AboutMeView,
   Home as HomeView,
   UserList as UserListView,
+  Dashboard as DashboardView,
   Typography as TypographyView,
   Icons as IconsView,
   Meta as MetaView,

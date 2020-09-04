@@ -15,12 +15,14 @@ export const fetchIssues = selector({
           {
             repository(owner: "abraidotti", name: "sandrobraidotti.com") {
               id
-              issues(first: 10, states: OPEN) {
+              issues(first: 10, orderBy: { field: CREATED_AT, direction: DESC }) {
                 edges {
                   node {
                     number
                     title
+                    state
                     url
+                    updatedAt
                   }
                 }
               }
@@ -30,5 +32,40 @@ export const fetchIssues = selector({
     );
     const { edges } = issuesData.repository.issues;
     return edges;
+  }
+});
+
+export const fetchProject = selector({
+  key: 'projectSelector',
+  get: async () => {
+    const projectData = await graphqlWithAuth(
+      `
+      {
+        repository(owner: "abraidotti", name: "sandrobraidotti.com") {
+          id
+          project(number: 1) {
+            updatedAt
+            name
+            url
+            body
+            columns(first: 4) {
+              nodes {
+                cards {
+                  totalCount
+                }
+                name
+              }
+            }
+          }
+        }
+      }
+        `
+    );
+    const { project } = projectData.repository
+    const totalCards = project.columns.nodes
+      .map(node => node.cards.totalCount)
+      .reduce((a, b) => a + b, 0);
+
+    return { ...project, totalCards };
   }
 });

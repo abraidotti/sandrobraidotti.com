@@ -33,11 +33,10 @@ const TodoStub = () => {
           <Button
             color="primary"
             disableElevation
-            href="https://github.com/abraidotti/sandrobraidotti.com/projects/1"
-            target="_blank"
+            href="/meta"
             variant="contained"
           >
-            Open the kanban board
+            Check the site meta
           </Button>
         </Typography>
       </CardContent>
