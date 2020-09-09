@@ -7,6 +7,43 @@ const graphqlWithAuth = graphql.defaults({
   }
 });
 
+export const fetchCommitMessages = selector({
+  key: 'commitMessagesSelector',
+  get: async () => {
+    const commitMessages = await graphqlWithAuth(
+      `
+      {
+        repository(owner: "abraidotti", name: "sandrobraidotti.com") {
+          ref(qualifiedName: "master") {
+            target {
+              ... on Commit {
+                history(first: 10) {
+                  pageInfo {
+                    hasNextPage
+                    endCursor
+                  }
+                  edges {
+                    node {
+                      url
+                      messageHeadline
+                      committedDate
+                      abbreviatedOid
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+        `
+    );
+    const { edges } = commitMessages.repository.ref.target.history;
+    console.log(edges)
+    return edges;
+  }
+});
+
 export const fetchIssues = selector({
   key: 'issuesSelector',
   get: async () => {
