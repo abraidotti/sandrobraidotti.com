@@ -33,7 +33,6 @@ const CommitList = () => {
 
   const CommitListItems = () => {
     const commitMessages = useRecoilValue(fetchCommitMessages);
-    console.log(commitMessages)
 
     return commitMessages.map( item => (
       <ListItem

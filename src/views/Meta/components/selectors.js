@@ -3,7 +3,7 @@ import { graphql } from '@octokit/graphql';
 
 const graphqlWithAuth = graphql.defaults({
   headers: {
-    authorization: `token ${process.env.REACT_APP_GITHUB_PERSONAL_TOKEN}`
+    authorization: `Bearer ${process.env.REACT_APP_GITHUB_PERSONAL_TOKEN}`
   }
 });
 
@@ -39,7 +39,6 @@ export const fetchCommitMessages = selector({
         `
     );
     const { edges } = commitMessages.repository.ref.target.history;
-    console.log(edges)
     return edges;
   }
 });
