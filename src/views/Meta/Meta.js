@@ -1,7 +1,7 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/styles';
 import { Grid } from '@material-ui/core';
-import { MetaStub } from './components';
+import { CommitList, IssueCounter, IssueList, MetaStub } from './components';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -20,12 +20,44 @@ const Meta = () => {
       >
         <Grid
           item
+          lg={12}
+          md={12}
+          xl={12}
+          xs={12}
+        >
+          <MetaStub />
+        </Grid>
+      </Grid>
+      <Grid
+        container
+        spacing={4}
+      >
+        <Grid
+          item
           lg={4}
           md={4}
           xl={4}
           xs={12}
         >
-          <MetaStub />
+          <IssueList />
+        </Grid>
+        <Grid
+          item
+          lg={4}
+          md={4}
+          xl={4}
+          xs={12}
+        >
+          <IssueCounter />
+        </Grid>
+        <Grid
+          item
+          lg={4}
+          md={4}
+          xl={4}
+          xs={12}
+        >
+          <CommitList />
         </Grid>
       </Grid>
     </div>

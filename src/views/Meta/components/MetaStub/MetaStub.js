@@ -38,13 +38,13 @@ const MetaStub = () => {
           component="h2"
           variant="h5"
         >
-          Meta Stub
+          Site analytics
         </Typography>
         <Typography
           className={classes.pos}
           color="textSecondary"
         >
-          Some metadata will be displayed here.
+          Powered by Github's GraphQL API and managed with React Recoil.
         </Typography>
       </CardContent>
     </Card>
