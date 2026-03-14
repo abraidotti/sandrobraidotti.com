@@ -4,9 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>sandrobraidotti.com</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #0d0d0d;
+      color: #c9c3b4;
+      font-family: Georgia, serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    main {
+      max-width: 600px;
+      padding: 2rem;
+      text-align: center;
+      line-height: 1.8;
+    }
+    p {
+      font-size: 1.15rem;
+      margin: 0 0 2rem 0;
+    }
+    time {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: #4a4540;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body>
-  <p>{{STORY}}</p>
-  <p><small>{{DATE}}</small></p>
+  <main>
+    <p>{{STORY}}</p>
+    <time datetime="{{DATE}}">{{DATE}}</time>
+  </main>
 </body>
 </html>
