@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: '0 6 * * *'
 
 permissions:
   id-token: write
@@ -16,6 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build index.html
+        run: python3 build.py
+
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -27,6 +32,9 @@ jobs:
           aws s3 sync . s3://abraidotti-sandrobraidotti-com \
             --exclude ".git/*" \
             --exclude ".github/*" \
+            --exclude "*.py" \
+            --exclude "*.json" \
+            --exclude "*.template.html" \
             --delete
 
       - name: Invalidate CloudFront cache
