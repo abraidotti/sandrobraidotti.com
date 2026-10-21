@@ -32,18 +32,17 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          role-to-assume: arn:aws:iam::800703958614:role/github-actions-sandrobraidotti-com
+          aws-region: us-east-1
 
       - name: Upload to S3
         run: |
           # Hashed assets never change: cache them forever.
-          aws s3 sync dist/_astro s3://sandrobraidotti.com/_astro --delete \
+          aws s3 sync dist/_astro s3://abraidotti-sandrobraidotti-com/_astro --delete \
             --cache-control "public, max-age=31536000, immutable"
           # Everything else (HTML, feeds, images) revalidates.
-          aws s3 sync dist s3://sandrobraidotti.com --delete --exclude "_astro/*" \
+          aws s3 sync dist s3://abraidotti-sandrobraidotti-com --delete --exclude "_astro/*" \
             --cache-control "public, max-age=0, must-revalidate"
 
       - name: Invalidate CloudFront
-        if: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID != '' }}
-        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id E2OFL6K1HFCZ4V --paths "/*"

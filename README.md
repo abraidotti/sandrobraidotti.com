@@ -51,10 +51,6 @@ Changing `commitParams` changes every existing song. The snapshot test in `tests
 
 ## Deploy
 
-`.github/workflows/deploy.yml` runs on every push to `master` (or manually). It runs `npm test` and `npm run build`, then syncs `dist/` to `s3://sandrobraidotti.com`.
+`.github/workflows/deploy.yml` runs on every push to `main` (or manually). It runs `npm test` and `npm run build`, syncs `dist/` to the S3 bucket `abraidotti-sandrobraidotti-com`, then invalidates CloudFront distribution `E2OFL6K1HFCZ4V`. AWS access goes through GitHub OIDC (role `github-actions-sandrobraidotti-com`), so the repo stores no AWS secrets.
 
-Repo settings it needs:
-
-- Secret `AWS_ROLE_ARN`: an IAM role trusted for GitHub OIDC on this repo, with `s3:ListBucket`, `s3:PutObject` and `s3:DeleteObject` on the bucket (plus `cloudfront:CreateInvalidation` if used).
-- Variable `AWS_REGION` (defaults to `us-east-1`).
-- Variable `CLOUDFRONT_DISTRIBUTION_ID` (optional; enables cache invalidation).
+CloudFront reads the bucket over REST, which doesn't resolve directory indexes. The viewer-request function in [`infra/cloudfront-rewrite.js`](infra/cloudfront-rewrite.js) maps `/blog/` to `/blog/index.html`. The distribution also serves `/404.html` for missing objects. If you change the function file, republish it in CloudFront; the workflow doesn't deploy it.
