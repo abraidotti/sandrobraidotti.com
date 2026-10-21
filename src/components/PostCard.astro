@@ -1,0 +1,29 @@
+---
+import CommitSong from './CommitSong.astro';
+import { formatDate, type Post } from '../lib/posts.ts';
+
+interface Props {
+  post: Post;
+  featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+const href = `/blog/${post.id}/`;
+const [tag] = post.data.tags;
+---
+
+<article class:list={['panel', 'card', { featured }]}>
+  <div class="card-head label-caps">
+    <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date, { month: 'short', day: 'numeric' })}</time>
+    {tag && <span class="dash" aria-hidden="true"></span>}
+    {tag && <span>{tag}</span>}
+  </div>
+  <div class="card-body">
+    <CommitSong hash={post.hash} size="card" />
+    <h3 class="card-title"><a href={href}>{post.data.title}</a></h3>
+    <p class="card-excerpt">{post.data.description}</p>
+    <div class="pill-row">
+      <a class="pill-btn" href={href} aria-label={`Read “${post.data.title}”`}>Read •••</a>
+    </div>
+  </div>
+</article>

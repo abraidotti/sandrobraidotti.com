@@ -1,0 +1,53 @@
+---
+title: "Dummy Thicc Text"
+date: 2026-10-21
+description: "Margiela gawker doomscroll artisan pug: a test post for the new site."
+tags: ["test", "music", "life"]
+---
+
+import CommitSong from '../../components/CommitSong.astro';
+
+I'm baby margiela gawker doomscroll artisan pug, le corbusier compost butcher hammock roof party signet lockwood new balance. Dembow feeld poke vegan, jonas mekas farm-to-table prism next level miso yorgos yes plz kettlebell listening bar breathwork. Blundstones furikake knausgaard locavore selfies yorgos lacto-ferment venmo man braid chartreuse aesthetic claire denis pug roof party. Wayfarers new balance thrifted kitsch. Sufjan venmo ayahuasca, edison bulb master cleanse cred listening party. Doomer ghosting yorgos marfa hot honey dembow pothos bedroom pop kogi cassavetes affogato literally.
+
+## Brutalism, but make it birria
+
+Digicam ube supper club gentrify bedroom pop vegan tofu monstera squid [robert walser](https://en.wikipedia.org/wiki/Robert_Walser). Birria *brutalism* paris review microdosing, succulents sufjan decolonize shoreditch activated charcoal **four dollar toast** echo park EMDR. Occupy dreamcatcher sohla el-waylly akerman lumbersexual swag. Put a bird on it miso selfies four dollar toast chambray intermittent fasting dad shoes, bolaño omakase tinned fish etsy van life banh mi. Angela davis omakase indie sleaze sufjan mubi poutine celiac shrub.
+
+## Things I'm into, in this economy
+
+Gibraltar tattooed viral wolf parasocial swag. A non-exhaustive list:
+
+- Ceramics, four dollar toast, ashwagandha
+- Breathwork, moka pot, reformer, ice bath
+- Cacio e pepe and the reading series
+- Bluesky, a v60, and a little solarpunk optimism
+- Guided by Voices, xiao long bao, trust fund (you probably haven't heard of them)
+
+And, in order of importance:
+
+1. Neutral Milk Hotel
+2. The listening party
+3. Knausgaard, somehow
+
+This post's own creation commit wrote the song below. Press play:
+
+<CommitSong hash={props.hash} size="full" />
+
+## Reading series
+
+Sartorial signet bedroom pop yuccie unicorn williamsburg pork belly bespoke margiela bicycle rights muji. Shabby chic listicle lumbersexual vape super 8 nduja. Taiyaki shakshuka birth chart cloud bread offal jade roller dembow knoll man braid. Waistcoat stussy crudo chili crisp, adaptogen post-rock activated charcoal reading series reformer `letterpress`.
+
+Here's roughly how a hash becomes a song, in the spirit of the site:
+
+```ts
+const rand = sfc32(...cyrb128(hash));   // seeded, so same hash = same song
+const tempo = 84 + Math.floor(rand() * 57);
+const steps = Array.from({ length: 16 }, () => ({
+  on: rand() < density,
+  wave: rand() < 0.6 ? leadWave : pick(WAVES),
+}));
+```
+
+Freire feeld gochujang kickstarter. Affogato venmo xiao long bao caviar bump slow-carb. Metrograph mitski chambray no wave carhartt locavore irony bone broth hairpin moon phase four dollar toast hipster runoff gravel bike chartreuse pét-nat. Gut health cornhole neutral milk hotel vice. Vice craft beer air plant furikake cahiers burrata moka pot everyday carry YOLO messenger bag austin neutra breathwork sustainable.
+
+> Dummy text? More like dummy thicc text, amirite?

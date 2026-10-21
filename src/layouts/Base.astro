@@ -1,0 +1,74 @@
+---
+import '@fontsource/grenze-gotisch/700.css';
+import '@fontsource/grenze-gotisch/900.css';
+import '@fontsource/eb-garamond/400.css';
+import '@fontsource/eb-garamond/400-italic.css';
+import '@fontsource/eb-garamond/600.css';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const SITE_TITLE = 'Sandro Braidotti';
+const { title, description = 'Notes, sounds and toys by Sandro Braidotti.' } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
+
+const nav = [
+  { href: '/', label: 'Home' },
+  { href: '/blog/', label: 'Blog' },
+  { href: '/toys/', label: 'Toys' },
+  { href: '/meta/', label: 'Meta' },
+];
+const path = Astro.url.pathname;
+const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={new URL(path, Astro.site)} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href="/rss.xml" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content="#0e0b0d" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="logo" href="/">Sandro Braidotti</a>
+      <svg class="ornament" viewBox="0 0 240 20" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M0 10H92M148 10H240"></path>
+          <path d="M100 6l4 4-4 4-4-4z M140 6l4 4-4 4-4-4z" fill="currentColor"></path>
+          <circle cx="120" cy="4.5" r="5"></circle>
+          <circle cx="120" cy="15.5" r="5"></circle>
+          <circle cx="114.5" cy="10" r="5"></circle>
+          <circle cx="125.5" cy="10" r="5"></circle>
+        </g>
+        <circle cx="120" cy="10" r="2" fill="currentColor"></circle>
+      </svg>
+      <nav class="nav" aria-label="Main">
+        {nav.map((item) => <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>{item.label}</a>)}
+      </nav>
+    </header>
+
+    <main class="wrap">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <span>© {new Date().getFullYear()} Sandro Braidotti</span>
+        <span><a href="/rss.xml">RSS</a> · <a href="https://github.com/abraidotti">GitHub</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

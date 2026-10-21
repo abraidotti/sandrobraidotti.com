@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import CommitSong from '../../components/CommitSong.astro';
+---
+
+<Base title="Toys" description="Small sound and art experiments.">
+  <div class="page-intro">
+    <h1>Toys</h1>
+    <p>Small sound and art experiments. More soon.</p>
+  </div>
+  <div class="card-grid">
+    <article class="panel card featured">
+      <div class="card-head label-caps"><span>Sound</span><span class="dash" aria-hidden="true"></span><span>Art</span></div>
+      <div class="card-body">
+        <CommitSong hash="commit song machine" size="card" />
+        <h3 class="card-title"><a href="/toys/commit-song/">Commit Song Machine</a></h3>
+        <p class="card-excerpt">Type a commit hash or any text and hear what it sounds like.</p>
+        <div class="pill-row"><a class="pill-btn" href="/toys/commit-song/">Play •••</a></div>
+      </div>
+    </article>
+  </div>
+</Base>

@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import PostCard from '../components/PostCard.astro';
+import { getPosts } from '../lib/posts.ts';
+
+const posts = (await getPosts()).slice(0, 6);
+---
+
+<Base>
+  <section class="panel intro">
+    <h1>Hi, I'm Sandro.</h1>
+    <p>
+      This is where I write things down, make noise, and build little toys. Every post gets its own picture and tune,
+      generated from the git commit that created it. Press play on any of them.
+    </p>
+  </section>
+
+  <section class="home-section">
+    <h2 class="section-title">Latest posts</h2>
+    <div class="card-grid">
+      {posts.map((post, i) => <PostCard post={post} featured={i === 0} />)}
+    </div>
+  </section>
+
+  <section class="home-section">
+    <h2 class="section-title">Toys</h2>
+    <p>
+      Small sound and art experiments. Start with the <a href="/toys/commit-song/">commit song machine</a>.
+    </p>
+  </section>
+</Base>

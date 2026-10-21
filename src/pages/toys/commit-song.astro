@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import CommitSong from '../../components/CommitSong.astro';
+import { recentCommits } from '../../lib/git.ts';
+
+const initial = recentCommits(1)[0]?.hash ?? 'hello world';
+---
+
+<Base title="Commit Song Machine" description="Turn any commit hash or text into a little song and a picture.">
+  <div class="page-intro">
+    <h1>Commit Song Machine</h1>
+    <p>
+      Paste a commit hash, or type anything, to get a tune and a picture. Shapes show waveforms (● sine, ■ square, ▲
+      triangle, saw-tooth for sawtooth), height is pitch, size is note length, and the little squares along the bottom are kick drums.
+    </p>
+  </div>
+  <section class="panel toy">
+    <form class="toy-input" data-toy-form>
+      <label class="visually-hidden" for="hash">Commit hash or any text</label>
+      <input id="hash" name="hash" value={initial} autocomplete="off" spellcheck="false" />
+      <button type="button" class="pill-btn ghost" data-random>Random</button>
+    </form>
+    <CommitSong hash={initial} size="full" />
+  </section>
+</Base>
+
+<script>
+  import { commitParams, describe } from '../../lib/commitParams.ts';
+  import { renderCommitArt } from '../../lib/commitArt.ts';
+  import { stopCommitSong } from '../../lib/commitPlayer.ts';
+
+  const form = document.querySelector<HTMLFormElement>('[data-toy-form]')!;
+  const input = form.querySelector('input')!;
+  const song = document.querySelector<HTMLElement>('[data-commit-song]')!;
+
+  function update() {
+    const hash = input.value.trim() || ' ';
+    if (hash === song.dataset.hash) return;
+    stopCommitSong();
+    const params = commitParams(hash);
+    song.dataset.hash = hash;
+    song.querySelector('.art-frame')!.innerHTML = renderCommitArt(params);
+    const meta = song.querySelector('[data-song-meta]')!;
+    meta.innerHTML = '<code></code> · ';
+    meta.querySelector('code')!.textContent = hash.slice(0, 7);
+    meta.append(describe(params));
+  }
+
+  input.addEventListener('input', update);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  form.querySelector('[data-random]')!.addEventListener('click', () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(20));
+    input.value = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    update();
+  });
+</script>

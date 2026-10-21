@@ -1,98 +1,60 @@
 # sandrobraidotti.com
 
-Sandro Braidotti's personal site.
+Personal site and blog, built with [Astro](https://astro.build). Static output, deployed to S3 by GitHub Actions.
 
-## Table of Contents
+Every post gets a generated picture and tune ("commit song") seeded by the hash of the git commit that created it.
 
-- [About](#About)
-  - [UI](#UI)
-  - [UI Infrastructure](#UI-Infrastructure)
-  - [API](#API)
-  - [API Infrastructure](#API-Infrastructure)
-- [Deployment](#Deployment)
-  - [Requirements](#Requirements)
-  - [Installation](#Installation)
-  - [Configuration](#Configuration)
-  - [Operation](#Operation)
-- [Usage](#Usage)
-- [Roadmap](#Roadmap)
-- [Contribution](#Contribution)
-- [License](#License)
-- [Contact](#Contact)
+## Develop
 
-## About
-
-This site is designed to represent my current preferred web application development practices and opinions.
-I've designed it so you can clone or fork it, install it, and develop it for your own purposes.
-
-## License
-
-Distributed under the MIT License. See `LICENSE.md` for more information.
-
-## UI
-
-React, testing
-
-## UI-Infrastructure
-
-CI/CD, terraform, ...testing
-
-![CircleCI](https://img.shields.io/circleci/build/github/abraidotti/sandrobraidotti.com/master)
-
-## API
-
-Serverless, Dynamodb, testing
-
-## API-Infrastructure
-
-CI/CD, terraform, ...testing
-
-## Deployment
-
-As this site is designed to be stood up and torn down in different environments, I've included instructions to deploy it.
-
-## Requirements
-
-## CLI
-
-You'll need several CLIs. AWS, CI/CD (TBA), etc.
-
-## Installation
-
-```bash
-git clone https://github.com/abraidotti/sandrobraidotti.com.git
-cd sandrobraidotti.com
+```sh
 npm install
+npm run dev       # http://localhost:4321
+npm test          # commit-song determinism tests
+npm run build     # type-check + build to dist/
+npm run preview
 ```
 
-## Configuration
+## Writing a post
 
-WIP
+Add `src/content/posts/<slug>.mdx` (or `.md`):
 
-## Operation
+```mdx
+---
+title: "Post title"
+date: 2026-10-21
+description: "One line for cards, RSS and meta tags."
+tags: ["music"]
+draft: false
+---
 
-WIP
+Body text...
+```
 
-## Usage
+The post's art and sound come from the commit that **adds** the file. Until you commit it, a stand-in hash is used (the build logs a warning). To embed the post's own player in an `.mdx` post:
 
-WIP
+```mdx
+import CommitSong from '../../components/CommitSong.astro';
 
-## Roadmap
+<CommitSong hash={props.hash} size="full" />
+```
 
-See the [open issues](https://github.com/abraidotti/sandrobraidotti.com/issues) for a list of proposed features and known issues.
+`<CommitSong hash="anything" />` works with any string too.
 
-## Contribution
+## How commit songs work
 
-If you really wanna...
+- `src/lib/commitParams.ts`: hash → seeded PRNG → root, scale, tempo, 16 steps (pitch, waveform, length, colour, kick).
+- `src/lib/commitArt.ts`: draws those params as an SVG "score" (column = step, height = pitch, shape = waveform).
+- `src/lib/commitAudio.ts`: plays the same params with Web Audio, or renders them to a `.wav` with `OfflineAudioContext`.
+- `src/lib/commitPlayer.ts`: the browser-side play/stop/download wiring.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Changing `commitParams` changes every existing song. The snapshot test in `tests/` exists to catch that.
 
-## Contact
+## Deploy
 
-[@sandy__beaches](https://twitter.com/sandy__beaches) - alessandro.braidotti@gmail.com
+`.github/workflows/deploy.yml` runs on every push to `master` (or manually). It runs `npm test` and `npm run build`, then syncs `dist/` to `s3://sandrobraidotti.com`.
 
-[https://github.com/abraidotti/sandrobraidotti.com](https://github.com/abraidotti/sandrobraidotti.com)
+Repo settings it needs:
+
+- Secret `AWS_ROLE_ARN`: an IAM role trusted for GitHub OIDC on this repo, with `s3:ListBucket`, `s3:PutObject` and `s3:DeleteObject` on the bucket (plus `cloudfront:CreateInvalidation` if used).
+- Variable `AWS_REGION` (defaults to `us-east-1`).
+- Variable `CLOUDFRONT_DISTRIBUTION_ID` (optional; enables cache invalidation).

@@ -1,0 +1,41 @@
+---
+// Generated art + playable tune for a commit hash. Styles live in global.css
+// (the toys page re-renders the SVG client-side, outside Astro's scoping).
+import { commitParams, describe } from '../lib/commitParams.ts';
+import { renderCommitArt } from '../lib/commitArt.ts';
+
+interface Props {
+  hash: string;
+  size?: 'full' | 'card' | 'thumb';
+}
+
+const { hash, size = 'card' } = Astro.props;
+const params = commitParams(hash);
+---
+
+<figure class:list={['commit-song', `size-${size}`]} data-commit-song data-hash={hash}>
+  <div class="art-frame" set:html={renderCommitArt(params)} />
+  <figcaption class="song-controls">
+    <button type="button" class="pill-btn play-btn" data-action="play" aria-pressed="false">
+      <span class="icon" aria-hidden="true"></span><span class="label">Play</span>
+    </button>
+    {
+      size !== 'thumb' && (
+        <span class="song-meta" data-song-meta>
+          <code>{hash.slice(0, 7)}</code> · {describe(params)}
+        </span>
+      )
+    }
+    {
+      size === 'full' && (
+        <button type="button" class="pill-btn ghost" data-action="wav">
+          ⤓ .wav
+        </button>
+      )
+    }
+  </figcaption>
+</figure>
+
+<script>
+  import '../lib/commitPlayer.ts';
+</script>

@@ -1,0 +1,32 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { formatDate, getPosts, type Post } from '../../lib/posts.ts';
+import { REPO_URL } from '../../lib/git.ts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: Post };
+const { Content } = await render(post);
+---
+
+<Base title={post.data.title} description={post.data.description}>
+  <article class="panel post">
+    <header class="post-header">
+      <div class="post-meta label-caps">
+        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+        {post.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+      </div>
+      <h1>{post.data.title}</h1>
+      <p class="label-caps">
+        seeded by commit <a href={`${REPO_URL}/commit/${post.hash}`}><code>{post.hash.slice(0, 7)}</code></a>
+      </p>
+    </header>
+    <div class="prose">
+      <Content hash={post.hash} />
+    </div>
+  </article>
+</Base>

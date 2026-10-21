@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import CommitSong from '../components/CommitSong.astro';
+import { REPO_URL, recentCommits } from '../lib/git.ts';
+import { formatDate } from '../lib/posts.ts';
+
+const commits = recentCommits(30);
+---
+
+<Base title="Meta" description="Recent commits to this site, each with its own generated song.">
+  <div class="page-intro">
+    <h1>Meta</h1>
+    <p>
+      The latest changes to <a href={REPO_URL}>this site's repo</a>, each with its own generated song. Press play to hear
+      a commit.
+    </p>
+  </div>
+  <ol class="panel commit-list">
+    {
+      commits.map((commit) => (
+        <li>
+          <CommitSong hash={commit.hash} size="thumb" />
+          <div>
+            <p class="commit-subject">{commit.subject}</p>
+            <p class="commit-detail">
+              <a href={commit.url}>
+                <code>{commit.hash.slice(0, 7)}</code>
+              </a>{' '}
+              · {formatDate(commit.date)} · {commit.author}
+            </p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</Base>

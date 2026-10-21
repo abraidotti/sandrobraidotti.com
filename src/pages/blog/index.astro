@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getPosts, type Post } from '../../lib/posts.ts';
+
+const posts = await getPosts();
+const byYear = new Map<number, Post[]>();
+for (const post of posts) {
+  const year = post.data.date.getUTCFullYear();
+  byYear.set(year, [...(byYear.get(year) ?? []), post]);
+}
+---
+
+<Base title="Blog" description="Posts by Sandro Braidotti.">
+  <div class="page-intro">
+    <h1>Blog</h1>
+    <p>Each post's art and tune are generated from the commit that created it.</p>
+  </div>
+  {
+    [...byYear].map(([year, yearPosts]) => (
+      <section class="year-group">
+        <h2 class="section-title">{year}</h2>
+        <div class="card-grid">
+          {yearPosts.map((post) => (
+            <PostCard post={post} />
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</Base>

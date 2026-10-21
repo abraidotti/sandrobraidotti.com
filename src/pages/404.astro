@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import CommitSong from '../components/CommitSong.astro';
+---
+
+<Base title="Not found">
+  <section class="panel toy">
+    <div class="page-intro">
+      <h1>404</h1>
+      <p>That page doesn't exist. Here's the song of a missing page instead.</p>
+    </div>
+    <CommitSong hash="404 not found" size="full" />
+    <p class="pill-row"><a class="pill-btn" href="/">Go home</a></p>
+  </section>
+</Base>
