@@ -57,12 +57,34 @@ test('voice leading keeps chord changes smooth', () => {
 
 test('drums are a regular beat: every bar the same except the last', () => {
   for (const hash of MANY) {
-    const { drums } = commitParams(hash);
-    const bar = (lane: (boolean | number)[], n: number) => lane.slice(n * BAR, (n + 1) * BAR).join();
+    const { drums, lateEntry } = commitParams(hash);
+    // A late entry rewrites the first two eighths of bar 3; compare the rest of the bar.
+    const bar = (lane: (boolean | number)[], n: number) =>
+      lane.slice(n * BAR + (lateEntry && n === 2 ? 2 : 0), (n + 1) * BAR).join();
+    const barTail = (lane: (boolean | number)[], n: number) => lane.slice(n * BAR + 2, (n + 1) * BAR).join();
     for (const lane of [drums.kick, drums.snare, drums.hat]) {
-      for (let n = 1; n < STEPS / BAR - 1; n++) assert.equal(bar(lane, n), bar(lane, 0), `${hash}: bar ${n} differs`);
+      for (let n = 1; n < STEPS / BAR - 1; n++) {
+        const reference = lateEntry && n === 2 ? barTail(lane, 0) : bar(lane, 0);
+        assert.equal(bar(lane, n), reference, `${hash}: bar ${n} differs`);
+      }
     }
     for (let n = 0; n < STEPS / BAR; n++) assert.ok(drums.kick[n * BAR], `${hash}: no kick on the downbeat of bar ${n}`);
+  }
+});
+
+test('late entry: bar 3 opens with a lone kick, chord arrives on the third eighth', () => {
+  const late = MANY.filter((h) => commitParams(h).lateEntry);
+  assert.ok(late.length > MANY.length * 0.2 && late.length < MANY.length * 0.5, `${late.length}/${MANY.length} late entries`);
+  const start = 2 * BAR;
+  for (const hash of late) {
+    const { drums, events, chords } = commitParams(hash);
+    assert.ok(drums.kick[start] && !drums.kick[start + 1], `${hash}: kick pattern`);
+    assert.ok(!drums.snare[start] && !drums.snare[start + 1] && !drums.hat[start] && !drums.hat[start + 1], `${hash}: drums not silent`);
+    assert.ok(!events.some((e) => e.step >= start && e.step < start + 2), `${hash}: a note sounds before the entry`);
+    assert.ok(events.some((e) => e.step === start + 2), `${hash}: nothing enters on the third eighth`);
+    assert.equal(chords[start / STEPS_PER_CHORD].step, start + 2);
+    // Nothing from the previous chord rings into the gap.
+    assert.ok(!events.some((e) => e.step < start && e.step + e.length > start), `${hash}: earlier note rings into the gap`);
   }
 });
 

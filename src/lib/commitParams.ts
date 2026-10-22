@@ -52,6 +52,8 @@ export interface SongParams {
   events: NoteEvent[];
   /** A regular beat: the same bar repeated, with a small fill at the end. Each array has STEPS entries. */
   drums: { groove: Groove; kick: boolean[]; snare: boolean[]; hat: number[] };
+  /** Bar 3 opens with a lone kick and the chord comes in on the third eighth. */
+  lateEntry: boolean;
   /** Seeded background decoration for the art. */
   backdrop: { x: number; y: number; r: number; color: number; arcadeY: number };
 }
@@ -313,7 +315,42 @@ export function commitParams(hash: string): SongParams {
     arcadeY: int(34, 180),
   };
 
-  return { hash, key, modeName, tempo, timbre, perform, unease, wobble, chords, events, drums, backdrop };
+  // Sometimes bar 3 takes a breath: a lone kick on the downbeat, then the chord enters on the third eighth.
+  // Drawn last so songs without it are unchanged.
+  const lateEntry = rand() < 0.35;
+  if (lateEntry) {
+    const index = (2 * BAR) / STEPS_PER_CHORD;
+    const chord = chords[index];
+    const entry = chord.step + 2;
+    // Sustained notes from the downbeat now start at the entry; anything shorter is dropped.
+    for (let i = events.length - 1; i >= 0; i--) {
+      const ev = events[i];
+      // Earlier notes stop at the downbeat so the kick stands alone.
+      if (ev.step < chord.step && ev.step + ev.length > chord.step) ev.length = chord.step - ev.step;
+      if (ev.chord !== index || ev.step >= entry) continue;
+      if (ev.step === chord.step && ev.step + ev.length > entry) {
+        ev.length -= entry - ev.step;
+        ev.step = entry;
+      } else {
+        events.splice(i, 1);
+      }
+    }
+    if (!events.some((e) => e.chord === index && e.step === entry)) {
+      for (const pitch of chord.notes) {
+        events.push({ chord: index, family: chord.family, color: chord.color, step: entry, length: 1, pitch, delay: 0, velocity: 0.7 });
+      }
+    }
+    chord.length -= entry - chord.step;
+    chord.step = entry;
+    for (let s = 2 * BAR; s < entry; s++) {
+      drums.kick[s] = s === 2 * BAR;
+      drums.snare[s] = false;
+      drums.hat[s] = 0;
+    }
+  }
+
+
+  return { hash, key, modeName, tempo, timbre, perform, unease, wobble, chords, events, drums, lateEntry, backdrop };
 }
 
 /** Seconds per step (steps are eighth notes). */
