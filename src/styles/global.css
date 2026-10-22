@@ -488,7 +488,7 @@ main {
   fill: #000;
 }
 
-.commit-art .kick {
+.commit-art .drum {
   fill: var(--line);
 }
 
@@ -536,7 +536,7 @@ main {
   opacity: 0.9;
 }
 
-.commit-art .kick.lit {
+.commit-art .drum.lit {
   fill: var(--accent-2);
 }
 

@@ -1,13 +1,13 @@
 // Web Audio rendering of SongParams. Works with a live AudioContext
 // (playback) or an OfflineAudioContext (.wav export).
 
-import { midiToFreq, stepDuration, type SongParams, type Timbre } from './commitParams.ts';
+import { STEPS, midiToFreq, stepDuration, type SongParams, type Timbre } from './commitParams.ts';
 
 /** Seconds of tail after the last step so the reverb can ring out. */
 export const TAIL = 3.5;
 
 export function songLength(params: SongParams): number {
-  return params.kicks.length * stepDuration(params) + TAIL;
+  return STEPS * stepDuration(params) + TAIL;
 }
 
 interface Partial {
@@ -62,6 +62,18 @@ const VOICES: Record<Timbre, Voice> = {
     attack: 0.35, release: 1.4, cutoff: 2600, level: 0.04,
   },
 };
+
+/** Deterministic white noise, for snare and hats. */
+function noise(ctx: BaseAudioContext, seconds: number): AudioBuffer {
+  const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * seconds), ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  let seed = 7;
+  for (let i = 0; i < data.length; i++) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
+    data[i] = ((seed >>> 0) / 4294967296) * 2 - 1;
+  }
+  return buffer;
+}
 
 /** Deterministic stereo impulse response: exponentially decaying noise. */
 function impulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
@@ -184,21 +196,66 @@ export function scheduleSong(ctx: BaseAudioContext, params: SongParams, start: n
     }
   }
 
+  // Drums: kick, a soft snare that blooms into the reverb, and quiet hats.
+  const noiseBuf = noise(ctx, 0.5);
+  const snareBus = ctx.createBiquadFilter();
+  snareBus.type = 'bandpass';
+  snareBus.frequency.value = 1800;
+  snareBus.Q.value = 0.8;
+  snareBus.connect(master);
+  const snareVerb = ctx.createGain();
+  snareVerb.gain.value = 0.6;
+  snareBus.connect(snareVerb).connect(reverbSend);
+  const hatBus = ctx.createBiquadFilter();
+  hatBus.type = 'highpass';
+  hatBus.frequency.value = 7000;
+  hatBus.connect(master);
+
+  const hit = (bus: AudioNode, t: number, peak: number, decay: number) => {
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(peak, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + decay);
+    src.connect(env).connect(bus);
+    src.start(t);
+    src.stop(t + decay + 0.02);
+  };
+
+  const { kick, snare, hat } = params.drums;
   const times: number[] = [];
-  params.kicks.forEach((kick, i) => {
+  for (let i = 0; i < STEPS; i++) {
     const t = start + i * dur;
     times.push(t);
-    if (!kick) return;
-    const osc = ctx.createOscillator();
-    osc.frequency.setValueAtTime(140, t);
-    osc.frequency.exponentialRampToValueAtTime(42, t + 0.14);
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.5, t);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
-    osc.connect(env).connect(master);
-    osc.start(t);
-    osc.stop(t + 0.35);
-  });
+
+    if (kick[i]) {
+      const osc = ctx.createOscillator();
+      osc.frequency.setValueAtTime(140, t);
+      osc.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.5, t);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+      osc.connect(env).connect(master);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    }
+
+    if (snare[i]) {
+      hit(snareBus, t, 0.32, 0.2);
+      const body = ctx.createOscillator();
+      body.type = 'triangle';
+      body.frequency.setValueAtTime(200, t);
+      body.frequency.exponentialRampToValueAtTime(160, t + 0.08);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.14, t);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      body.connect(env).connect(snareBus);
+      body.start(t);
+      body.stop(t + 0.14);
+    }
+
+    if (hat[i] > 0) hit(hatBus, t, 0.09 * hat[i], 0.05);
+  }
 
   return { master, times };
 }

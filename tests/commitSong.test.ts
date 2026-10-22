@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STEPS, STEPS_PER_CHORD, commitParams, progression } from '../src/lib/commitParams.ts';
+import { BAR, STEPS, STEPS_PER_CHORD, commitParams, progression } from '../src/lib/commitParams.ts';
 import { renderCommitArt } from '../src/lib/commitArt.ts';
 
 const HASHES = [
@@ -27,7 +27,7 @@ test('different hashes produce different songs', () => {
 test('songs are 32 steps of 8 voice-led chords', () => {
   for (const hash of MANY) {
     const p = commitParams(hash);
-    assert.equal(p.kicks.length, STEPS);
+    for (const lane of [p.drums.kick, p.drums.snare, p.drums.hat]) assert.equal(lane.length, STEPS);
     assert.equal(p.chords.length, STEPS / STEPS_PER_CHORD);
     assert.ok(p.tempo >= 76 && p.tempo <= 112);
     for (const c of p.chords) {
@@ -53,6 +53,17 @@ test('voice leading keeps chord changes smooth', () => {
     }
   }
   assert.ok(total / moves < 6, `average lowest-voice jump ${total / moves} semitones`);
+});
+
+test('drums are a regular beat: every bar the same except the last', () => {
+  for (const hash of MANY) {
+    const { drums } = commitParams(hash);
+    const bar = (lane: (boolean | number)[], n: number) => lane.slice(n * BAR, (n + 1) * BAR).join();
+    for (const lane of [drums.kick, drums.snare, drums.hat]) {
+      for (let n = 1; n < STEPS / BAR - 1; n++) assert.equal(bar(lane, n), bar(lane, 0), `${hash}: bar ${n} differs`);
+    }
+    for (let n = 0; n < STEPS / BAR; n++) assert.ok(drums.kick[n * BAR], `${hash}: no kick on the downbeat of bar ${n}`);
+  }
 });
 
 test('mostly dreamy, sometimes unsettling', () => {

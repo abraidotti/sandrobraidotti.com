@@ -7,6 +7,7 @@
 export type Family = 'major' | 'minor' | 'sus' | 'strange';
 export type Timbre = 'velvet' | 'glass' | 'hollow' | 'choir';
 export type Perform = 'pad' | 'strum' | 'arp' | 'pulse';
+export type Groove = 'backbeat' | 'four on the floor' | 'half-time' | 'shuffle';
 
 export interface Chord {
   step: number;
@@ -49,13 +50,16 @@ export interface SongParams {
   wobble: { depth: number; rate: number };
   chords: Chord[];
   events: NoteEvent[];
-  kicks: boolean[];
+  /** A regular beat: the same bar repeated, with a small fill at the end. Each array has STEPS entries. */
+  drums: { groove: Groove; kick: boolean[]; snare: boolean[]; hat: number[] };
   /** Seeded background decoration for the art. */
   backdrop: { x: number; y: number; r: number; color: number; arcadeY: number };
 }
 
 export const STEPS = 32;
 export const STEPS_PER_CHORD = 4;
+/** Steps per bar (eighth notes in 4/4). */
+export const BAR = 8;
 export const PITCH_MAX = 90;
 
 const MODES: Record<string, number[]> = {
@@ -75,6 +79,14 @@ const TEMPLATES = [
   [0, 5, 3, 4], [0, 3, 5, 4], [0, 2, 3, 4], [5, 3, 0, 4],
   [0, 3, 0, 4], [0, 4, 5, 3], [0, 6, 5, 3], [0, 5, 1, 4],
 ];
+
+// One bar of each groove, in eighth notes. Hats are velocities (0 = silent).
+const GROOVES: Record<Groove, { kick: number[]; snare: number[]; hat: number[] }> = {
+  backbeat: { kick: [1, 0, 0, 0, 1, 0, 0, 0], snare: [0, 0, 1, 0, 0, 0, 1, 0], hat: [0.6, 1, 0.6, 1, 0.6, 1, 0.6, 1] },
+  'four on the floor': { kick: [1, 0, 1, 0, 1, 0, 1, 0], snare: [0, 0, 1, 0, 0, 0, 1, 0], hat: [0, 1, 0, 1, 0, 1, 0, 1] },
+  'half-time': { kick: [1, 0, 0, 0, 0, 0, 0, 0], snare: [0, 0, 0, 0, 1, 0, 0, 0], hat: [0.6, 1, 0.6, 1, 0.6, 1, 0.6, 1] },
+  shuffle: { kick: [1, 0, 0, 1, 0, 0, 0, 0], snare: [0, 0, 1, 0, 0, 0, 1, 0], hat: [1, 0, 0.7, 1, 0, 0.7, 1, 0] },
+};
 
 // Out-of-key colours for the unsettling moments.
 const STRANGE: [string, number[]][] = [
@@ -278,9 +290,20 @@ export function commitParams(hash: string): SongParams {
     }
   });
 
-  const kicks = Array.from({ length: STEPS }, (_, i) =>
-    i % 8 === 0 ? rand() < 0.9 : i % 8 === 4 ? rand() < 0.3 : rand() < 0.07,
-  );
+  // Drums: one groove repeated every bar, with a fill in the last bar.
+  const groove = weighted<Groove>([['backbeat', 3], ['half-time', 3], ['four on the floor', 2], ['shuffle', 2]]);
+  const bar = GROOVES[groove];
+  const drums = {
+    groove,
+    kick: Array.from({ length: STEPS }, (_, i) => bar.kick[i % BAR] === 1),
+    snare: Array.from({ length: STEPS }, (_, i) => bar.snare[i % BAR] === 1),
+    hat: Array.from({ length: STEPS }, (_, i) => bar.hat[i % BAR]),
+  };
+  const fill = pick(['snare roll', 'kick pickup', 'open']);
+  const last = STEPS - BAR;
+  if (fill === 'snare roll') [5, 7].forEach((s) => (drums.snare[last + s] = true));
+  if (fill === 'kick pickup') drums.kick[STEPS - 1] = true;
+  if (fill === 'open') drums.hat[STEPS - 1] = 0;
 
   const backdrop = {
     x: int(70, 410),
@@ -290,7 +313,7 @@ export function commitParams(hash: string): SongParams {
     arcadeY: int(34, 180),
   };
 
-  return { hash, key, modeName, tempo, timbre, perform, unease, wobble, chords, events, kicks, backdrop };
+  return { hash, key, modeName, tempo, timbre, perform, unease, wobble, chords, events, drums, backdrop };
 }
 
 /** Seconds per step (steps are eighth notes). */
@@ -303,7 +326,7 @@ export function midiToFreq(midi: number): number {
 }
 
 export function describe(params: SongParams): string {
-  return `${NOTE_NAMES[params.key]} ${params.modeName} · ${params.timbre} ${params.perform} · ${params.tempo} bpm`;
+  return `${NOTE_NAMES[params.key]} ${params.modeName} · ${params.timbre} ${params.perform} · ${params.drums.groove} · ${params.tempo} bpm`;
 }
 
 /** e.g. "Am9 → Fmaj7 → Cadd9 → G7sus4 → …" */

@@ -1,6 +1,6 @@
 // Renders SongParams as an inline SVG "visual score", styled as stained glass.
 // column = step, height = pitch, shape = chord family (● major, ■ minor, ▲ sus, jagged = strange),
-// tail = how long a note rings, colour = chord. Bass and kicks get their own lanes at the bottom.
+// tail = how long a note rings, colour = chord. Bass and drums (hats, snare, kick) get lanes at the bottom.
 // Pure string output so it works both at build time (Astro) and in the browser (toys).
 
 import {
@@ -17,9 +17,11 @@ export const ART_HEIGHT = 270;
 const PAD_X = 20;
 const COL = (ART_WIDTH - PAD_X * 2) / STEPS;
 const TOP = 28;
-const BOTTOM = 192;
-const BASS_Y = 218;
-const KICK_Y = 244;
+const BOTTOM = 186;
+const BASS_Y = 208;
+const HAT_Y = 229;
+const SNARE_Y = 243;
+const KICK_Y = 257;
 
 function escapeXml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -59,7 +61,7 @@ function pitchScale(pitches: number[]) {
 }
 
 export function renderCommitArt(params: SongParams): string {
-  const { chords, events, kicks, backdrop } = params;
+  const { chords, events, drums, backdrop } = params;
   const dur = stepDuration(params);
   const pitchY = pitchScale(events.map((e) => e.pitch));
   const parts: string[] = [];
@@ -121,11 +123,20 @@ export function renderCommitArt(params: SongParams): string {
     parts.push(`<g class="ev${ghost ? ' ghost' : ''}" data-step="${ev.step}" data-len="${ev.length}">${g.join('')}</g>`);
   }
 
-  kicks.forEach((kick, i) => {
-    if (!kick) return;
+  // Drum lanes: hats as dots (sized by accent), snare as diamonds, kick as squares.
+  for (let i = 0; i < STEPS; i++) {
     const cx = stepX(i);
-    parts.push(`<rect class="kick ev" data-step="${i}" data-len="1" x="${f(cx - 3.5)}" y="${KICK_Y - 3.5}" width="7" height="7"/>`);
-  });
+    const at = `data-step="${i}" data-len="1"`;
+    if (drums.hat[i] > 0) {
+      parts.push(`<circle class="drum ev" ${at} cx="${f(cx)}" cy="${HAT_Y}" r="${f(1.5 + drums.hat[i] * 1.5)}"/>`);
+    }
+    if (drums.snare[i]) {
+      parts.push(`<rect class="drum ev" ${at} x="${f(cx - 3)}" y="${SNARE_Y - 3}" width="6" height="6" transform="rotate(45 ${f(cx)} ${SNARE_Y})"/>`);
+    }
+    if (drums.kick[i]) {
+      parts.push(`<rect class="drum ev" ${at} x="${f(cx - 3.5)}" y="${KICK_Y - 3.5}" width="7" height="7"/>`);
+    }
+  }
 
   const label = escapeXml(`Generated score for ${params.hash.slice(0, 7)}: ${describe(params)}`);
   return `<svg class="commit-art" viewBox="0 0 ${ART_WIDTH} ${ART_HEIGHT}" role="img" aria-label="${label}" xmlns="http://www.w3.org/2000/svg">${parts.join('')}</svg>`;
