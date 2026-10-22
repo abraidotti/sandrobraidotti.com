@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import CommitSong from '../../components/CommitSong.astro';
 import { recentCommits } from '../../lib/git.ts';
+import { commitParams, progression } from '../../lib/commitParams.ts';
 
 const initial = recentCommits(1)[0]?.hash ?? 'hello world';
 ---
@@ -10,8 +11,9 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
   <div class="page-intro">
     <h1>Commit Song Machine</h1>
     <p>
-      Paste a commit hash, or type anything, to get a tune and a picture. Shapes show waveforms (● sine, ■ square, ▲
-      triangle, saw-tooth for sawtooth), height is pitch, size is note length, and the little squares along the bottom are kick drums.
+      Paste a commit hash, or type anything, to get a chord progression and a picture of it. Height is pitch, and tails
+      show how long a note rings. Shapes show each chord's feeling: ● major, ■ minor, ▲ suspended, and jagged for the
+      strange ones. The bars below are the bass; the little squares are kick drums.
     </p>
   </div>
   <section class="panel toy">
@@ -21,11 +23,12 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
       <button type="button" class="pill-btn ghost" data-random>Random</button>
     </form>
     <CommitSong hash={initial} size="full" />
+    <p class="progression" data-progression>{progression(commitParams(initial))}</p>
   </section>
 </Base>
 
 <script>
-  import { commitParams, describe } from '../../lib/commitParams.ts';
+  import { commitParams, describe, progression } from '../../lib/commitParams.ts';
   import { renderCommitArt } from '../../lib/commitArt.ts';
   import { stopCommitSong } from '../../lib/commitPlayer.ts';
 
@@ -44,6 +47,7 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
     meta.innerHTML = '<code></code> · ';
     meta.querySelector('code')!.textContent = hash.slice(0, 7);
     meta.append(describe(params));
+    document.querySelector('[data-progression]')!.textContent = progression(params);
   }
 
   input.addEventListener('input', update);

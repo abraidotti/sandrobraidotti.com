@@ -1,15 +1,81 @@
 // Web Audio rendering of SongParams. Works with a live AudioContext
 // (playback) or an OfflineAudioContext (.wav export).
 
-import { midiToFreq, stepDuration, type SongParams, type Wave } from './commitParams.ts';
+import { midiToFreq, stepDuration, type SongParams, type Timbre } from './commitParams.ts';
 
-const PEAK: Record<Wave, number> = { sine: 0.32, triangle: 0.3, square: 0.1, sawtooth: 0.11 };
-
-/** Seconds of tail after the last step so the delay can ring out. */
-export const TAIL = 1.6;
+/** Seconds of tail after the last step so the reverb can ring out. */
+export const TAIL = 3.5;
 
 export function songLength(params: SongParams): number {
-  return params.steps.length * stepDuration(params) + TAIL;
+  return params.kicks.length * stepDuration(params) + TAIL;
+}
+
+interface Partial {
+  type: OscillatorType;
+  /** Semitones from the note. */
+  interval: number;
+  /** Cents of extra detune, for chorus-y width. */
+  detune: number;
+  gain: number;
+}
+
+interface Voice {
+  partials: Partial[];
+  attack: number;
+  release: number;
+  cutoff: number;
+  level: number;
+}
+
+const VOICES: Record<Timbre, Voice> = {
+  // Detuned saws through a dark filter: the classic lush pad.
+  velvet: {
+    partials: [
+      { type: 'sawtooth', interval: 0, detune: -8, gain: 1 },
+      { type: 'sawtooth', interval: 0, detune: 8, gain: 1 },
+    ],
+    attack: 0.06, release: 0.9, cutoff: 1500, level: 0.035,
+  },
+  // Bell-ish: triangle plus a quiet octave shimmer.
+  glass: {
+    partials: [
+      { type: 'triangle', interval: 0, detune: 0, gain: 1 },
+      { type: 'sine', interval: 12, detune: 4, gain: 0.35 },
+    ],
+    attack: 0.01, release: 1.2, cutoff: 5000, level: 0.07,
+  },
+  // Filtered square with a sine core: woody, a bit eerie.
+  hollow: {
+    partials: [
+      { type: 'square', interval: 0, detune: -4, gain: 0.7 },
+      { type: 'sine', interval: 0, detune: 4, gain: 1 },
+    ],
+    attack: 0.03, release: 0.8, cutoff: 1100, level: 0.05,
+  },
+  // Slow-breathing triangles with a sub: an organ/choir haze.
+  choir: {
+    partials: [
+      { type: 'triangle', interval: 0, detune: -11, gain: 1 },
+      { type: 'triangle', interval: 0, detune: 11, gain: 1 },
+      { type: 'sine', interval: -12, detune: 0, gain: 0.4 },
+    ],
+    attack: 0.35, release: 1.4, cutoff: 2600, level: 0.04,
+  },
+};
+
+/** Deterministic stereo impulse response: exponentially decaying noise. */
+function impulse(ctx: BaseAudioContext, seconds: number): AudioBuffer {
+  const length = Math.floor(ctx.sampleRate * seconds);
+  const buffer = ctx.createBuffer(2, length, ctx.sampleRate);
+  let seed = 1;
+  for (let c = 0; c < 2; c++) {
+    const data = buffer.getChannelData(c);
+    for (let i = 0; i < length; i++) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
+      data[i] = ((seed >>> 0) / 4294967296 * 2 - 1) * Math.pow(1 - i / length, 2.6);
+    }
+  }
+  return buffer;
 }
 
 /**
@@ -18,60 +84,120 @@ export function songLength(params: SongParams): number {
  */
 export function scheduleSong(ctx: BaseAudioContext, params: SongParams, start: number) {
   const dur = stepDuration(params);
+  const voice = VOICES[params.timbre];
 
   const master = ctx.createGain();
-  master.gain.value = 0.8;
-  master.connect(ctx.destination);
+  master.gain.value = 0.9;
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -18;
+  comp.ratio.value = 3;
+  master.connect(comp).connect(ctx.destination);
 
-  // Dotted-eighth feedback delay for a bit of space.
-  const delay = ctx.createDelay(2);
-  delay.delayTime.value = dur * 1.5;
+  const reverb = ctx.createConvolver();
+  reverb.buffer = impulse(ctx, 3);
+  const reverbSend = ctx.createGain();
+  reverbSend.gain.value = 0.45;
+  reverbSend.connect(reverb).connect(master);
+
+  const delay = ctx.createDelay(3);
+  delay.delayTime.value = dur * 3;
   const feedback = ctx.createGain();
-  feedback.gain.value = 0.3;
-  const wet = ctx.createGain();
-  wet.gain.value = 0.25;
+  feedback.gain.value = 0.28;
+  const delaySend = ctx.createGain();
+  delaySend.gain.value = 0.18;
+  delaySend.connect(delay);
   delay.connect(feedback).connect(delay);
-  delay.connect(wet).connect(master);
+  delay.connect(master);
+  delay.connect(reverbSend);
 
   const voiceBus = ctx.createBiquadFilter();
   voiceBus.type = 'lowpass';
-  voiceBus.frequency.value = 2600;
+  voiceBus.frequency.value = voice.cutoff;
+  voiceBus.Q.value = 0.7;
   voiceBus.connect(master);
-  voiceBus.connect(delay);
+  voiceBus.connect(reverbSend);
+  voiceBus.connect(delaySend);
+
+  // Tape wobble: one slow LFO bending every oscillator's pitch together.
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = params.wobble.rate;
+  const lfoDepth = ctx.createGain();
+  lfoDepth.gain.value = params.wobble.depth;
+  lfo.connect(lfoDepth);
+  lfo.start(start);
+  lfo.stop(start + songLength(params));
+
+  for (const ev of params.events) {
+    const t = start + ev.step * dur + ev.delay;
+    const len = ev.length * dur;
+    const peak = voice.level * ev.velocity;
+    const attack = Math.min(voice.attack, len * 0.5);
+    const end = t + len + voice.release;
+
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(peak, t + attack);
+    env.gain.setTargetAtTime(peak * 0.7, t + attack, 0.3);
+    env.gain.setValueAtTime(peak * 0.7, t + len);
+    env.gain.exponentialRampToValueAtTime(0.0001, end);
+    env.connect(voiceBus);
+
+    for (const p of voice.partials) {
+      const osc = ctx.createOscillator();
+      osc.type = p.type;
+      osc.frequency.value = midiToFreq(ev.pitch + p.interval);
+      osc.detune.value = p.detune + params.chords[ev.chord].drift;
+      lfoDepth.connect(osc.detune);
+      const g = ctx.createGain();
+      g.gain.value = p.gain;
+      osc.connect(g).connect(env);
+      osc.start(t);
+      osc.stop(end + 0.05);
+    }
+  }
+
+  // Bass: a round sub under each chord, mostly dry.
+  const bassBus = ctx.createBiquadFilter();
+  bassBus.type = 'lowpass';
+  bassBus.frequency.value = 420;
+  bassBus.connect(master);
+  for (const chord of params.chords) {
+    const t = start + chord.step * dur;
+    const len = chord.length * dur;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.2, t + 0.02);
+    env.gain.setTargetAtTime(0.14, t + 0.02, 0.2);
+    env.gain.setValueAtTime(0.14, t + len - 0.05);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.25);
+    env.connect(bassBus);
+    for (const type of ['sine', 'triangle'] as const) {
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = midiToFreq(chord.bass);
+      osc.detune.value = chord.drift;
+      const g = ctx.createGain();
+      g.gain.value = type === 'sine' ? 1 : 0.4;
+      osc.connect(g).connect(env);
+      osc.start(t);
+      osc.stop(t + len + 0.3);
+    }
+  }
 
   const times: number[] = [];
-  params.steps.forEach((step, i) => {
+  params.kicks.forEach((kick, i) => {
     const t = start + i * dur;
     times.push(t);
-
-    if (step.on) {
-      const len = dur * step.length * 0.9;
-      const osc = ctx.createOscillator();
-      osc.type = step.wave;
-      osc.frequency.value = midiToFreq(step.pitch);
-      const env = ctx.createGain();
-      const peak = PEAK[step.wave];
-      env.gain.setValueAtTime(0, t);
-      env.gain.linearRampToValueAtTime(peak, t + 0.01);
-      env.gain.exponentialRampToValueAtTime(peak * 0.5, t + Math.min(0.12, len));
-      env.gain.setValueAtTime(peak * 0.5, t + len);
-      env.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.08);
-      osc.connect(env).connect(voiceBus);
-      osc.start(t);
-      osc.stop(t + len + 0.1);
-    }
-
-    if (step.kick) {
-      const osc = ctx.createOscillator();
-      osc.frequency.setValueAtTime(150, t);
-      osc.frequency.exponentialRampToValueAtTime(45, t + 0.12);
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0.55, t);
-      env.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-      osc.connect(env).connect(master);
-      osc.start(t);
-      osc.stop(t + 0.3);
-    }
+    if (!kick) return;
+    const osc = ctx.createOscillator();
+    osc.frequency.setValueAtTime(140, t);
+    osc.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.5, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+    osc.connect(env).connect(master);
+    osc.start(t);
+    osc.stop(t + 0.35);
   });
 
   return { master, times };

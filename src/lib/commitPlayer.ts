@@ -20,7 +20,7 @@ function setPlaying(el: HTMLElement, playing: boolean) {
     btn.setAttribute('aria-pressed', String(playing));
     btn.querySelector('.label')!.textContent = playing ? 'Stop' : 'Play';
   }
-  if (!playing) el.querySelectorAll('.step.lit').forEach((s) => s.classList.remove('lit'));
+  if (!playing) el.querySelectorAll('.ev.lit').forEach((s) => s.classList.remove('lit'));
 }
 
 export function stopCommitSong() {
@@ -44,13 +44,17 @@ async function play(el: HTMLElement) {
   const dur = stepDuration(params);
   const { master, times } = scheduleSong(ctx, params, ctx.currentTime + 0.05);
   const end = times[times.length - 1] + dur + TAIL;
-  const steps = Array.from(el.querySelectorAll<SVGGElement>('.step'));
+  // Each note lights up for as long as it rings.
+  const notes = Array.from(el.querySelectorAll<SVGElement>('.ev'), (node) => {
+    const start = times[Number(node.dataset.step)];
+    return { node, start, end: start + Math.max(1, Number(node.dataset.len)) * dur };
+  });
 
   const playback: Playback = { el, master, raf: 0 };
   const tick = () => {
     const now = ctx!.currentTime;
     if (now > end) return stopCommitSong();
-    steps.forEach((s, i) => s.classList.toggle('lit', now >= times[i] && now < times[i] + dur));
+    for (const n of notes) n.node.classList.toggle('lit', now >= n.start && now < n.end);
     playback.raf = requestAnimationFrame(tick);
   };
   current = playback;

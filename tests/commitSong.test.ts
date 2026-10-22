@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STEPS, DEGREES, commitParams } from '../src/lib/commitParams.ts';
+import { STEPS, STEPS_PER_CHORD, commitParams, progression } from '../src/lib/commitParams.ts';
 import { renderCommitArt } from '../src/lib/commitArt.ts';
 
 const HASHES = [
@@ -8,6 +8,9 @@ const HASHES = [
   '8400153aaaabbbbccccddddeeeeffff000011112',
   'not even a hash',
 ];
+
+// A spread of hashes for statistical checks.
+const MANY = Array.from({ length: 300 }, (_, i) => `hash-${i}`);
 
 test('same hash always produces identical params and SVG', () => {
   for (const hash of HASHES) {
@@ -21,18 +24,40 @@ test('different hashes produce different songs', () => {
   assert.equal(svgs.size, HASHES.length);
 });
 
-test('params stay in musical ranges', () => {
-  for (const hash of HASHES) {
+test('songs are 32 steps of 8 voice-led chords', () => {
+  for (const hash of MANY) {
     const p = commitParams(hash);
-    assert.equal(p.steps.length, STEPS);
-    assert.ok(p.steps[0].on, 'first step always plays');
-    assert.ok(p.tempo >= 84 && p.tempo <= 140);
-    for (const s of p.steps) {
-      assert.ok(s.degree >= 0 && s.degree < DEGREES);
-      assert.ok(s.length >= 1 && s.length <= 3);
-      assert.ok(s.color >= 1 && s.color <= 5);
+    assert.equal(p.kicks.length, STEPS);
+    assert.equal(p.chords.length, STEPS / STEPS_PER_CHORD);
+    assert.ok(p.tempo >= 76 && p.tempo <= 112);
+    for (const c of p.chords) {
+      assert.ok(c.notes.length >= 3 && c.notes.length <= 5, `${hash}: ${c.name} has ${c.notes.length} notes`);
+      assert.ok(c.notes[0] >= 50 && c.notes[c.notes.length - 1] <= 88, `${hash}: ${c.name} voiced out of range`);
+      assert.ok(c.bass >= 36 && c.bass < 48);
+      assert.ok(!c.name.includes('*'), `${hash}: unnamed chord ${c.name}`);
+    }
+    for (const e of p.events) {
+      assert.ok(e.step >= 0 && e.step < STEPS && e.velocity > 0 && e.velocity <= 1);
     }
   }
+});
+
+test('voice leading keeps chord changes smooth', () => {
+  let total = 0;
+  let moves = 0;
+  for (const hash of MANY) {
+    const { chords } = commitParams(hash);
+    for (let i = 1; i < chords.length; i++) {
+      total += Math.abs(chords[i].notes[0] - chords[i - 1].notes[0]);
+      moves++;
+    }
+  }
+  assert.ok(total / moves < 6, `average lowest-voice jump ${total / moves} semitones`);
+});
+
+test('mostly dreamy, sometimes unsettling', () => {
+  const uneasy = MANY.filter((h) => commitParams(h).chords.some((c) => c.family === 'strange')).length;
+  assert.ok(uneasy > MANY.length * 0.15 && uneasy < MANY.length * 0.5, `${uneasy}/${MANY.length} songs have strange chords`);
 });
 
 test('SVG escapes user-supplied text', () => {
@@ -44,9 +69,15 @@ test('snapshot: known hash keeps its song', () => {
   // If this fails, every existing post's art and tune changed. Only update it on purpose.
   const p = commitParams(HASHES[0]);
   assert.deepEqual(
-    { root: p.root, scale: p.scaleName, tempo: p.tempo, on: p.steps.map((s) => (s.on ? 1 : 0)).join('') },
+    { mode: p.modeName, tempo: p.tempo, timbre: p.timbre, perform: p.perform, chords: progression(p) },
     SNAPSHOT,
   );
 });
 
-const SNAPSHOT = { root: 47, scale: 'major pentatonic', tempo: 104, on: '1101101111011111' };
+const SNAPSHOT = {
+  mode: 'aeolian',
+  tempo: 89,
+  timbre: 'velvet',
+  perform: 'strum',
+  chords: 'Dm7 → Fmaj9 → Gm7 → Am7 → D7sus2 → Fmaj9 → Gm9 → B♭maj7',
+};

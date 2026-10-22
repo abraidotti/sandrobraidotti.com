@@ -42,8 +42,8 @@ import CommitSong from '../../components/CommitSong.astro';
 
 ## How commit songs work
 
-- `src/lib/commitParams.ts`: hash → seeded PRNG → root, scale, tempo, 16 steps (pitch, waveform, length, colour, kick).
-- `src/lib/commitArt.ts`: draws those params as an SVG "score" (column = step, height = pitch, shape = waveform).
+- `src/lib/commitParams.ts`: hash → seeded PRNG → mode, tempo, timbre, perform mode, and an 8-chord voice-led progression (mostly lush, sometimes unsettling) over 32 steps, plus kicks.
+- `src/lib/commitArt.ts`: draws those params as an SVG "score" (column = step, height = pitch, shape = chord quality, tail = note length).
 - `src/lib/commitAudio.ts`: plays the same params with Web Audio, or renders them to a `.wav` with `OfflineAudioContext`.
 - `src/lib/commitPlayer.ts`: the browser-side play/stop/download wiring.
 

@@ -1,40 +1,67 @@
-// Renders SongParams as an inline SVG "visual score".
-// column = step, height = pitch, shape = waveform, size = note length, fill = palette colour.
+// Renders SongParams as an inline SVG "visual score", styled as stained glass.
+// column = step, height = pitch, shape = chord family (● major, ■ minor, ▲ sus, jagged = strange),
+// tail = how long a note rings, colour = chord. Bass and kicks get their own lanes at the bottom.
 // Pure string output so it works both at build time (Astro) and in the browser (toys).
 
-import { DEGREES, STEPS, describe, type SongParams, type Wave } from './commitParams.ts';
+import {
+  STEPS,
+  describe,
+  stepDuration,
+  type Family,
+  type SongParams,
+} from './commitParams.ts';
 
-export const ART_WIDTH = 400;
-export const ART_HEIGHT = 240;
+export const ART_WIDTH = 480;
+export const ART_HEIGHT = 270;
 
-const PAD_X = 24;
+const PAD_X = 20;
 const COL = (ART_WIDTH - PAD_X * 2) / STEPS;
-const TOP = 36;
-const BOTTOM = 188;
-const KICK_Y = 214;
+const TOP = 28;
+const BOTTOM = 192;
+const BASS_Y = 218;
+const KICK_Y = 244;
 
 function escapeXml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function shape(wave: Wave, cx: number, cy: number, s: number, cls: string): string {
-  const pts = (p: number[][]) => p.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
-  switch (wave) {
-    case 'sine':
-      return `<circle class="${cls}" cx="${cx}" cy="${cy}" r="${s}"/>`;
-    case 'square':
-      return `<rect class="${cls}" x="${cx - s}" y="${cy - s}" width="${s * 2}" height="${s * 2}" rx="2"/>`;
-    case 'triangle':
-      return `<polygon class="${cls}" points="${pts([[cx, cy - s], [cx + s, cy + s], [cx - s, cy + s]])}"/>`;
-    case 'sawtooth':
+const f = (n: number) => n.toFixed(1);
+
+function shape(family: Family, cx: number, cy: number, s: number, cls: string): string {
+  const pts = (p: number[][]) => p.map(([x, y]) => `${f(x)},${f(y)}`).join(' ');
+  switch (family) {
+    case 'major':
+      return `<circle class="${cls}" cx="${f(cx)}" cy="${f(cy)}" r="${f(s)}"/>`;
+    case 'minor':
+      return `<rect class="${cls}" x="${f(cx - s)}" y="${f(cy - s)}" width="${f(s * 2)}" height="${f(s * 2)}"/>`;
+    case 'sus':
+      return `<polygon class="${cls}" points="${pts([[cx, cy - s * 1.15], [cx + s, cy + s * 0.85], [cx - s, cy + s * 0.85]])}"/>`;
+    case 'strange':
       return `<polygon class="${cls}" points="${pts([
-        [cx - s, cy + s], [cx - s * 0.1, cy - s], [cx - s * 0.1, cy], [cx + s, cy - s], [cx + s, cy + s],
+        [cx - s, cy + s], [cx - s * 0.5, cy - s], [cx, cy + s * 0.2], [cx + s * 0.5, cy - s], [cx + s, cy + s],
       ])}"/>`;
   }
 }
 
+const stepX = (step: number) => PAD_X + COL * step + COL / 2;
+
+/** Fit the y-axis to this song's own pitch range (at least MIN_SPAN semitones) so chords spread out. */
+const MIN_SPAN = 20;
+function pitchScale(pitches: number[]) {
+  let lo = Math.min(...pitches) - 1;
+  let hi = Math.max(...pitches) + 1;
+  if (hi - lo < MIN_SPAN) {
+    const mid = (hi + lo) / 2;
+    lo = mid - MIN_SPAN / 2;
+    hi = mid + MIN_SPAN / 2;
+  }
+  return (pitch: number) => BOTTOM - ((pitch - lo) / (hi - lo)) * (BOTTOM - TOP);
+}
+
 export function renderCommitArt(params: SongParams): string {
-  const { steps, backdrop } = params;
+  const { chords, events, kicks, backdrop } = params;
+  const dur = stepDuration(params);
+  const pitchY = pitchScale(events.map((e) => e.pitch));
   const parts: string[] = [];
 
   // Backdrop: a seeded rose window and a gothic arcade, like a cathedral wall behind the glass.
@@ -42,12 +69,10 @@ export function renderCommitArt(params: SongParams): string {
   const rose: string[] = [`<circle cx="${rx}" cy="${ry}" r="${r}"/>`];
   for (let i = 0; i < 8; i++) {
     const a = (Math.PI / 4) * i;
-    const px = (rx + Math.cos(a) * r * 0.66).toFixed(1);
-    const py = (ry + Math.sin(a) * r * 0.66).toFixed(1);
-    rose.push(`<line x1="${rx}" y1="${ry}" x2="${(rx + Math.cos(a) * r).toFixed(1)}" y2="${(ry + Math.sin(a) * r).toFixed(1)}"/>`);
-    rose.push(`<circle cx="${px}" cy="${py}" r="${(r * 0.24).toFixed(1)}"/>`);
+    rose.push(`<line x1="${rx}" y1="${ry}" x2="${f(rx + Math.cos(a) * r)}" y2="${f(ry + Math.sin(a) * r)}"/>`);
+    rose.push(`<circle cx="${f(rx + Math.cos(a) * r * 0.66)}" cy="${f(ry + Math.sin(a) * r * 0.66)}" r="${f(r * 0.24)}"/>`);
   }
-  rose.push(`<circle cx="${rx}" cy="${ry}" r="${(r * 0.3).toFixed(1)}"/>`);
+  rose.push(`<circle cx="${rx}" cy="${ry}" r="${f(r * 0.3)}"/>`);
   parts.push(`<g class="backdrop c${backdrop.color}">${rose.join('')}</g>`);
 
   const y = backdrop.arcadeY;
@@ -57,28 +82,49 @@ export function renderCommitArt(params: SongParams): string {
   }
   parts.push(`<path class="arcade" d="${arcade.join('')}"/>`);
 
-  // Staff lines.
+  // Staff lines, then faint bar lines at each chord change.
   for (let i = 0; i < 5; i++) {
-    const y = TOP + ((BOTTOM - TOP) / 4) * i;
-    parts.push(`<line class="staff" x1="${PAD_X / 2}" y1="${y}" x2="${ART_WIDTH - PAD_X / 2}" y2="${y}"/>`);
+    const ly = TOP + ((BOTTOM - TOP) / 4) * i;
+    parts.push(`<line class="staff" x1="${PAD_X / 2}" y1="${ly}" x2="${ART_WIDTH - PAD_X / 2}" y2="${ly}"/>`);
+  }
+  for (const chord of chords.slice(1)) {
+    const bx = f(PAD_X + COL * chord.step);
+    parts.push(`<line class="barline" x1="${bx}" y1="${TOP - 10}" x2="${bx}" y2="${BASS_Y + 8}"/>`);
   }
   parts.push(`<line class="kickline" x1="${PAD_X / 2}" y1="${KICK_Y}" x2="${ART_WIDTH - PAD_X / 2}" y2="${KICK_Y}"/>`);
 
-  steps.forEach((step, i) => {
-    const cx = PAD_X + COL * i + COL / 2;
-    const cy = BOTTOM - ((BOTTOM - TOP) / (DEGREES - 1)) * step.degree;
-    const s = 7 + step.length * 3;
+  // Bass lane: one bar per chord.
+  chords.forEach((chord) => {
+    const x = PAD_X + COL * chord.step + 2;
+    const w = COL * chord.length - 4;
+    parts.push(
+      `<g class="ev" data-step="${chord.step}" data-len="${chord.length}">` +
+        `<rect class="ink" x="${f(x + 2)}" y="${BASS_Y - 3}" width="${f(w)}" height="8"/>` +
+        `<rect class="note-shape c${chord.color}" x="${f(x)}" y="${BASS_Y - 5}" width="${f(w)}" height="8"/></g>`,
+    );
+  });
+
+  // Notes: ghost (quiet bed) notes first so the played notes sit on top.
+  const ordered = [...events].sort((a, b) => a.velocity - b.velocity);
+  for (const ev of ordered) {
+    const cx = stepX(ev.step) + (ev.delay / dur) * COL;
+    const cy = pitchY(ev.pitch);
+    const ghost = ev.velocity < 0.5;
+    const s = 3 + ev.velocity * 3.5;
+    const tailEnd = stepX(ev.step + ev.length) - COL / 2 - 2;
     const g: string[] = [];
-    if (step.on) {
-      g.push(`<g class="shadow" transform="translate(3 3)">${shape(step.wave, cx, cy, s, 'ink')}</g>`);
-      g.push(shape(step.wave, cx, cy, s, `note-shape c${step.color}`));
-    } else {
-      g.push(`<circle class="rest" cx="${cx}" cy="${cy}" r="2.5"/>`);
+    if (tailEnd > cx + s) {
+      g.push(`<line class="tail t${ev.color}" x1="${f(cx)}" y1="${f(cy)}" x2="${f(tailEnd)}" y2="${f(cy)}"/>`);
     }
-    if (step.kick) {
-      g.push(`<rect class="kick" x="${cx - 4}" y="${KICK_Y - 4}" width="8" height="8"/>`);
-    }
-    parts.push(`<g class="step" data-step="${i}">${g.join('')}</g>`);
+    if (!ghost) g.push(`<g class="shadow" transform="translate(2 2)">${shape(ev.family, cx, cy, s, 'ink')}</g>`);
+    g.push(shape(ev.family, cx, cy, s, `note-shape c${ev.color}`));
+    parts.push(`<g class="ev${ghost ? ' ghost' : ''}" data-step="${ev.step}" data-len="${ev.length}">${g.join('')}</g>`);
+  }
+
+  kicks.forEach((kick, i) => {
+    if (!kick) return;
+    const cx = stepX(i);
+    parts.push(`<rect class="kick ev" data-step="${i}" data-len="1" x="${f(cx - 3.5)}" y="${KICK_Y - 3.5}" width="7" height="7"/>`);
   });
 
   const label = escapeXml(`Generated score for ${params.hash.slice(0, 7)}: ${describe(params)}`);

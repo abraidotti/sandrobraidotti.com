@@ -488,33 +488,61 @@ main {
   fill: #000;
 }
 
-.commit-art .rest,
 .commit-art .kick {
   fill: var(--line);
 }
 
+.commit-art .barline {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  opacity: 0.25;
+}
+
 .commit-art .note-shape {
   stroke: var(--art-lead);
-  stroke-width: 3;
+  stroke-width: 2.5;
   stroke-linejoin: miter;
 }
 
-.commit-art .step > * {
-  transition: transform 90ms ease, filter 90ms ease;
+.commit-art .tail {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.55;
 }
 
-.commit-art .step.lit .note-shape {
-  transform: translate(3px, 3px);
-  filter: brightness(1.45);
+.commit-art .t1 { stroke: var(--art-1); }
+.commit-art .t2 { stroke: var(--art-2); }
+.commit-art .t3 { stroke: var(--art-3); }
+.commit-art .t4 { stroke: var(--art-4); }
+.commit-art .t5 { stroke: var(--art-5); }
+
+.commit-art .ghost {
+  opacity: 0.4;
 }
 
-.commit-art .step.lit .kick,
-.commit-art .step.lit .rest {
+.commit-art .ev,
+.commit-art .ev > * {
+  transition: transform 90ms ease, filter 90ms ease, opacity 90ms ease;
+}
+
+.commit-art .ev.lit .note-shape {
+  transform: translate(2px, 2px);
+  filter: brightness(1.5);
+}
+
+.commit-art .ev.lit .tail,
+.commit-art .ghost.lit {
+  opacity: 0.9;
+}
+
+.commit-art .kick.lit {
   fill: var(--accent-2);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .commit-art .step > * {
+  .commit-art .ev,
+  .commit-art .ev > * {
     transition: none;
   }
 }
@@ -738,4 +766,11 @@ main {
   color: var(--accent);
   background: var(--bg);
   border: 2px solid var(--line);
+}
+
+.progression {
+  margin: 20px 0 0;
+  text-align: center;
+  font-style: italic;
+  color: var(--accent);
 }
