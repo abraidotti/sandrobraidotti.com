@@ -8,12 +8,17 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
 const params = spriteParams(initial);
 ---
 
-<Base title="Sprite Machine" description="Type a name, or anything at all, and meet the grim little character it belongs to.">
+<Base title="Black Company Sprite Machine" description="Type a name, or anything at all, and meet the grim little character it belongs to. Fan art in the style of Glen Cook's The Black Company.">
   <div class="page-intro">
-    <h1>Sprite Machine</h1>
+    <h1>Black Company Sprite Machine</h1>
     <p>Type a name, or anything at all, to meet the character it belongs to. Leave a hash and it names them for you.</p>
+    <p class="sprite-credit">Fan art in the style of Glen Cook's <cite>The Black Company</cite> series.</p>
   </div>
   <section class="panel machine">
+    <div class="sprite-motion">
+      <p data-sprite-motion-note>Sprites breathe, blink and act when clicked.</p>
+      <button type="button" class="pill-btn ghost" data-sprite-motion-toggle aria-pressed="false">Animate</button>
+    </div>
     <form class="machine-input" data-sprite-form data-initial={initial}>
       <label class="visually-hidden" for="sprite-seed">A name, or any text</label>
       <input id="sprite-seed" name="seed" value={initial} autocomplete="off" spellcheck="false" />
@@ -24,9 +29,6 @@ const params = spriteParams(initial);
       <figcaption>
         <h2 class="sprite-name" data-sprite-name>{displayName(params.name)}</h2>
         <p class="sprite-meta" data-sprite-meta>{describeSprite(params)}</p>
-        <p class="pill-row sprite-motion">
-          <button type="button" class="pill-btn ghost" data-sprite-motion-toggle aria-pressed="false">Animate</button>
-        </p>
       </figcaption>
     </figure>
   </section>
@@ -70,10 +72,15 @@ const params = spriteParams(initial);
   const root = document.documentElement;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const toggle = document.querySelector<HTMLButtonElement>('[data-sprite-motion-toggle]')!;
+  const note = document.querySelector<HTMLElement>('[data-sprite-motion-note]')!;
   const moving = () => (root.dataset.spriteMotion ? root.dataset.spriteMotion === 'on' : !reduce.matches);
   const showToggle = () => {
     toggle.setAttribute('aria-pressed', String(moving()));
     toggle.textContent = moving() ? 'Pause' : 'Animate';
+    note.textContent =
+      reduce.matches && !root.dataset.spriteMotion
+        ? 'Your device asks websites to reduce motion, so the sprites start still. You can animate them anyway.'
+        : 'Sprites breathe, blink and act when clicked.';
   };
   try {
     const saved = localStorage.getItem('sprite-motion');

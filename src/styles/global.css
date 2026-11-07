@@ -896,5 +896,24 @@ main {
 }
 
 .sprite-motion {
-  margin: 16px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.sprite-motion p {
+  flex: 1 1 260px;
+  margin: 0;
+}
+
+.sprite-credit {
+  font-size: 0.95rem;
+  font-style: italic;
 }
