@@ -1,6 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import CommitSong from '../../components/CommitSong.astro';
+import { spriteParams } from '../../lib/spriteParams.ts';
+import { renderSprite } from '../../lib/spriteArt.ts';
 ---
 
 <Base title="Machines" description="Small, sad mechanical things that make sounds and pictures.">
@@ -16,6 +18,15 @@ import CommitSong from '../../components/CommitSong.astro';
         <h3 class="card-title"><a href="/machines/commit-song/">Commit Song Machine</a></h3>
         <p class="card-excerpt">Type a commit hash or any text and hear what it sounds like.</p>
         <div class="pill-row"><a class="pill-btn" href="/machines/commit-song/">Play •••</a></div>
+      </div>
+    </article>
+    <article class="panel card">
+      <div class="card-head label-caps"><span>Pixels</span><span class="dash" aria-hidden="true"></span><span>Names</span></div>
+      <div class="card-body">
+        <figure class="sprite" set:html={renderSprite(spriteParams('sprite machine'))} />
+        <h3 class="card-title"><a href="/machines/sprites/">Sprite Machine</a></h3>
+        <p class="card-excerpt">Type a name, or anything at all, and meet the grim little character it belongs to.</p>
+        <div class="pill-row"><a class="pill-btn" href="/machines/sprites/">Meet •••</a></div>
       </div>
     </article>
   </div>

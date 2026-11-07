@@ -778,3 +778,52 @@ main {
   font-style: italic;
   color: var(--accent);
 }
+
+/* ---------- sprites ---------- */
+.sprite {
+  margin: 0;
+  text-align: center;
+}
+
+.sprite-art {
+  display: block;
+  width: min(256px, 70%);
+  height: auto;
+  margin-inline: auto;
+}
+
+/* Two-frame idle: the frames take turns. */
+.sprite-art .frame-b {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sprite-art .frame-a {
+    animation: sprite-frame-a 1.4s steps(1) infinite;
+  }
+  .sprite-art .frame-b {
+    animation: sprite-frame-b 1.4s steps(1) infinite;
+  }
+}
+
+@keyframes sprite-frame-a {
+  0% { visibility: visible; }
+  50% { visibility: hidden; }
+}
+
+@keyframes sprite-frame-b {
+  0% { visibility: hidden; }
+  50% { visibility: visible; }
+}
+
+.sprite-name {
+  margin: 18px 0 4px;
+  font-size: 2.2rem;
+  overflow-wrap: anywhere;
+}
+
+.sprite-meta {
+  margin: 0;
+  font-style: italic;
+  color: var(--accent);
+}

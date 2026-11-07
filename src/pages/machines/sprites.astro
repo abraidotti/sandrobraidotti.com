@@ -1,0 +1,75 @@
+---
+import Base from '../../layouts/Base.astro';
+import { recentCommits } from '../../lib/git.ts';
+import { describeSprite, displayName, spriteParams } from '../../lib/spriteParams.ts';
+import { renderSprite } from '../../lib/spriteArt.ts';
+
+const initial = recentCommits(1)[0]?.hash ?? 'hello world';
+const params = spriteParams(initial);
+---
+
+<Base title="Sprite Machine" description="Type a name, or anything at all, and meet the grim little character it belongs to.">
+  <div class="page-intro">
+    <h1>Sprite Machine</h1>
+    <p>Type a name, or anything at all, to meet the character it belongs to. Leave a hash and it names them for you.</p>
+  </div>
+  <section class="panel machine">
+    <form class="machine-input" data-sprite-form data-initial={initial}>
+      <label class="visually-hidden" for="sprite-seed">A name, or any text</label>
+      <input id="sprite-seed" name="seed" value={initial} autocomplete="off" spellcheck="false" />
+      <button type="button" class="pill-btn ghost" data-random>Random</button>
+    </form>
+    <figure class="sprite">
+      <div data-sprite-art set:html={renderSprite(params)} />
+      <figcaption>
+        <h2 class="sprite-name" data-sprite-name>{displayName(params.name)}</h2>
+        <p class="sprite-meta" data-sprite-meta>{describeSprite(params)}</p>
+      </figcaption>
+    </figure>
+  </section>
+</Base>
+
+<script>
+  import { describeSprite, displayName, spriteParams } from '../../lib/spriteParams.ts';
+  import { renderSprite } from '../../lib/spriteArt.ts';
+
+  const form = document.querySelector<HTMLFormElement>('[data-sprite-form]')!;
+  const input = form.querySelector('input')!;
+  const initial = form.dataset.initial!;
+  const art = document.querySelector<HTMLElement>('[data-sprite-art]')!;
+  const nameEl = document.querySelector<HTMLElement>('[data-sprite-name]')!;
+  const metaEl = document.querySelector<HTMLElement>('[data-sprite-meta]')!;
+
+  // A hash (the default, Random, or ?seed=) gets a generated name; typed text (or ?name=) is the name.
+  function show(text: string, typed: boolean) {
+    const params = spriteParams(text, typed);
+    art.innerHTML = renderSprite(params);
+    nameEl.textContent = displayName(params.name);
+    metaEl.textContent = describeSprite(params);
+    const url = new URL(location.href);
+    url.search = text === initial && !typed ? '' : new URLSearchParams({ [typed ? 'name' : 'seed']: text }).toString();
+    history.replaceState(null, '', url);
+  }
+
+  input.addEventListener('input', () => {
+    if (input.value.trim()) show(input.value, true);
+    else show(initial, false);
+  });
+  form.addEventListener('submit', (e) => e.preventDefault());
+  form.querySelector('[data-random]')!.addEventListener('click', () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(20));
+    input.value = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    show(input.value, false);
+  });
+
+  const query = new URLSearchParams(location.search);
+  const name = query.get('name')?.trim();
+  const seed = query.get('seed')?.trim();
+  if (name) {
+    input.value = name;
+    show(name, true);
+  } else if (seed) {
+    input.value = seed;
+    show(seed, false);
+  }
+</script>
