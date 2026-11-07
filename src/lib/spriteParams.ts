@@ -56,6 +56,19 @@ export const ARCHETYPES: Archetype[] = [
     },
   },
   {
+    id: 'gravedigger',
+    weight: 2,
+    parts: {
+      face: ['gaunt', 'long-haired', 'bearded'],
+      expression: EXPRESSIONS,
+      headgear: ['broad hat', 'hood', null],
+      torso: ['oilskin coat'],
+      legs: ['coat skirt'],
+      cloak: [null, null, 'ragged cloak'],
+      weapon: ['lantern and dagger'],
+    },
+  },
+  {
     id: 'hedge-wizard',
     weight: 2,
     parts: {

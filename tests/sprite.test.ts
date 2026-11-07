@@ -88,7 +88,7 @@ test('every sprite can blink, and glowing pixels can flicker', () => {
     const svg = renderSprite(p);
     // Both frames close both eyes.
     assert.equal((svg.match(/<g class="lids"><rect/g) ?? []).length, 2, `${seed}: no eyelids`);
-    const glowing = p.parts.weapon === 'staff' || p.corrupted;
+    const glowing = p.corrupted || Object.values(p.parts).some((id) => JSON.stringify(PARTS.find((part) => part.id === id)!.layers).includes('v'));
     assert.equal(/<g class="flares"><rect/.test(svg), glowing, `${seed}: flares`);
   }
 });

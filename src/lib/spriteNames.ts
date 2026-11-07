@@ -14,6 +14,8 @@ const PART_WORDS: Record<string, string[]> = {
   warhammer: ['Maul', 'Anvil', 'Knock', 'Thud'],
   'great helm': ['Bucket', 'Visor'],
   chainmail: ['Rings', 'Rattle'],
+  'lantern and dagger': ['Wick', 'Lamp', 'Shiv', 'Gloam'],
+  'oilskin coat': ['Damp', 'Oily'],
   staff: ['Wick', 'Hex', 'Murmur', 'Cant'],
   hood: ['Cowl', 'Hush', 'Shade'],
   'kettle hat': ['Pot', 'Tin', 'Bucket'],

@@ -199,6 +199,8 @@ const PART_ITEMS: Record<string, string[]> = {
   warhammer: ['a warhammer reforged so often none of the original remains. They still call it by its first name'],
   'great helm': ['a great helm with a dent the exact shape of a mace'],
   chainmail: ['a mail shirt missing a hand’s width of rings over the heart, which they find funny'],
+  'lantern and dagger': ['a lantern that has never once gone out, even in the rain, even underwater', 'a dagger with a bone handle, and an answer ready if anyone asks whose bone'],
+  'oilskin coat': ['an oilskin coat that smells of earth no matter how often it is washed, which is never'],
   staff: ['a staff of blackthorn that stays warm on cold nights'],
   hood: ['a hood they have not been seen without'],
   'kettle hat': ['a kettle hat with someone else’s name scratched inside it'],
@@ -235,6 +237,13 @@ const FEATS: Record<string, string[]> = {
     'Broke a shield wall by walking into it and not stopping.',
     'Still keeps the vigil of a dead order, alone, every midwinter.',
     'Took a gate off its hinges in three blows. The gate is on display somewhere. They are not invited.',
+  ],
+  gravedigger: [
+    'Has buried half the company at one time or another. Speaks well of all of them, especially the ones who owed money.',
+    'Dug a grave in frozen ground in an hour, then dug a second one beside it for the officer who said it could not be done.',
+    'Walked into a crypt with a lantern and a knife, and came out with the lantern, the knife, and a prisoner.',
+    'Knows every way into a graveyard after dark, and three ways out that do not involve the gate.',
+    'Kept a night watch over the dead after a battle. In the morning there were fewer looters, and one more grave.',
   ],
   'hedge-wizard': [
     'Turned a river fog into something that ate a cavalry patrol. Has not repeated the trick, and goes quiet when asked.',

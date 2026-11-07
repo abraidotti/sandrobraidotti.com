@@ -174,6 +174,24 @@ function hammerUp(dy = 0): Run[] {
   ];
 }
 
+/** A dagger held low in the front fist, point down. */
+const daggerLow: Run[] = [[16, 8, 'qr'], ...fist, [19, 7, 'rqr'], [20, 7, 'pq'], [21, 7, 'pq'], [22, 7, 'pr'], [23, 7, 'p']];
+
+/** A lantern hanging from the back hand at the hip, its window glowing. */
+const lanternLow: Run[] = [[21, 21, 'r'], [22, 20, 'rqr'], [23, 20, 'qvr'], [24, 20, 'qvr'], [25, 20, 'qvr'], [26, 20, 'rqr']];
+
+/**
+ * The back arm raised high, a lantern swinging from it beside the head and throwing light, shifted
+ * by `dx` to follow a leaning body. The resting back arm is erased first.
+ */
+const lanternRaised = (dx = 0): Run[] =>
+  [
+    [15, 21, '__'], [16, 21, '__'], [17, 21, '__'], [18, 21, '__'], [19, 21, '__'], [20, 20, '___'],
+    [14, 20, 'hh'], [13, 21, 'hh'], [12, 21, 'hi'], [11, 22, 'h'], [10, 22, 'bc'],
+    [11, 24, 'r'], [12, 23, 'rqr'], [13, 23, 'qvr'], [14, 23, 'qvr'], [15, 23, 'qvr'], [16, 23, 'rqr'],
+    [11, 27, '~'], [13, 28, '~'], [15, 28, '~'], [17, 27, '~'], [18, 24, '~'], [10, 25, '~'],
+  ].map(([y, x, px]) => [y, (x as number) + dx, px] as Run);
+
 /** A quiver of bolts at the hip, fletchings showing. */
 const quiver: Run[] = [[17, 21, 'x'], [18, 20, 'xy'], [19, 20, 'nn'], [20, 20, 'mn'], [21, 20, 'mn'], [22, 20, 'mo'], [23, 20, 'oo']];
 
@@ -748,6 +766,54 @@ export const PARTS: Part[] = [
     },
   },
   {
+    id: 'lantern and dagger',
+    slot: 'weapon',
+    layers: { main: [...lanternLow, ...daggerLow] },
+    action: {
+      verb: 'stab',
+      frames: [
+        // Lift: the lantern swings up high and flares; the dagger draws back to the chest.
+        {
+          ms: 220,
+          runs: [
+            ...lanternRaised(),
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            [15, 6, 'pppqr'], [14, 10, 'r'], [16, 10, 'r'],
+            [15, 11, 'ab'], [16, 11, 'bc'],
+          ],
+        },
+        // Stab: a lunge, the dagger out at full reach.
+        {
+          ms: 100,
+          lean: 2,
+          runs: [
+            ...lanternRaised(-2),
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            [16, 1, 'pppqr'], [15, 5, 'r'], [17, 5, 'r'],
+            [16, 6, 'ab'], [17, 6, 'bc'],
+            [14, 3, '~~~'], [19, 2, '~~~'],
+          ],
+        },
+        // Hit: held at the end of the thrust, a burst at the point, the lantern still high.
+        {
+          ms: 180,
+          lean: 2,
+          runs: [
+            ...lanternRaised(-2),
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            [16, 2, 'ppqr'], [15, 5, 'r'], [17, 5, 'r'],
+            [16, 6, 'ab'], [17, 6, 'bc'],
+            [13, 2, '~'], [14, 1, '~'], [16, 1, '~'], [18, 1, '~'], [19, 2, '~'], [15, 3, 'v'], [18, 3, 'v'],
+          ],
+        },
+        // Recover: back to rest, the lantern still swinging a pixel out.
+        { ms: 240, lean: 1, runs: [...daggerLow, ...shifted(lanternLow, 1)] },
+      ],
+    },
+  },
+  {
     id: 'staff',
     slot: 'weapon',
     layers: { main: staff(17) },
@@ -858,6 +924,10 @@ PARTS.push(
 
 // Greaves: metal over the shins, boots underneath.
 PARTS.push(recut('trousers', 'greaves', recolour({ j: 'p', k: 'q', l: 'r' })));
+
+// The gravedigger's oilskin coat and its long skirts: the robe's cut, in leather.
+const oilskin = recolour({ g: 'm', h: 'n', i: 'o' });
+PARTS.push(recut('robe', 'oilskin coat', oilskin), recut('robe skirt', 'coat skirt', oilskin));
 
 /** A colour ramp: light, base, shadow. */
 export type Ramp = [string, string, string];
