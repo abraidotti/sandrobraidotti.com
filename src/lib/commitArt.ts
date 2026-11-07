@@ -1,7 +1,7 @@
 // Renders SongParams as an inline SVG "visual score", styled as stained glass.
 // column = step, height = pitch, shape = chord family (● major, ■ minor, ▲ sus, jagged = strange),
 // tail = how long a note rings, colour = chord. Bass and drums (hats, snare, kick) get lanes at the bottom.
-// Pure string output so it works both at build time (Astro) and in the browser (toys).
+// Pure string output so it works both at build time (Astro) and in the browser (machines).
 
 import {
   STEPS,

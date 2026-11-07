@@ -16,8 +16,8 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
       strange ones. Below that: the bass, then the drums (dots are hi-hats, diamonds snare, squares kick).
     </p>
   </div>
-  <section class="panel toy">
-    <form class="toy-input" data-toy-form>
+  <section class="panel machine">
+    <form class="machine-input" data-machine-form>
       <label class="visually-hidden" for="hash">Commit hash or any text</label>
       <input id="hash" name="hash" value={initial} autocomplete="off" spellcheck="false" />
       <button type="button" class="pill-btn ghost" data-random>Random</button>
@@ -32,7 +32,7 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
   import { renderCommitArt } from '../../lib/commitArt.ts';
   import { stopCommitSong } from '../../lib/commitPlayer.ts';
 
-  const form = document.querySelector<HTMLFormElement>('[data-toy-form]')!;
+  const form = document.querySelector<HTMLFormElement>('[data-machine-form]')!;
   const input = form.querySelector('input')!;
   const song = document.querySelector<HTMLElement>('[data-commit-song]')!;
 

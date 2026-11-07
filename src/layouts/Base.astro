@@ -12,13 +12,13 @@ interface Props {
 }
 
 const SITE_TITLE = 'Sandro Braidotti';
-const { title, description = 'Notes, sounds and toys by Sandro Braidotti.' } = Astro.props;
+const { title, description = 'Notes, sounds and machines by Sandro Braidotti.' } = Astro.props;
 const fullTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
 
 const nav = [
   { href: '/', label: 'Home' },
   { href: '/blog/', label: 'Blog' },
-  { href: '/toys/', label: 'Toys' },
+  { href: '/machines/', label: 'Machines' },
   { href: '/meta/', label: 'Meta' },
 ];
 const path = Astro.url.pathname;

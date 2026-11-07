@@ -742,21 +742,21 @@ main {
   color: var(--text-soft);
 }
 
-/* ---------- toys ---------- */
-.toy {
+/* ---------- machines ---------- */
+.machine {
   max-width: 720px;
   margin-inline: auto;
   padding: clamp(20px, 4vw, 36px);
 }
 
-.toy-input {
+.machine-input {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 26px;
 }
 
-.toy-input input {
+.machine-input input {
   flex: 1 1 240px;
   min-width: 0;
   padding: 8px 14px;
