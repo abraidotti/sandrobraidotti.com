@@ -193,6 +193,9 @@ const ITEMS = [
 const PART_ITEMS: Record<string, string[]> = {
   falchion: ['a falchion with a notch in the edge they refuse to grind out'],
   spear: ['a spear with a rag tied below the head, for luck or for blood, depending on the day'],
+  crossbow: ['a crossbow with eleven notches on the stock and room for many more', 'a quiver of bolts, each fletched by hand and named'],
+  'broad hat': ['a broad hat that has stopped two arrows and one wedding'],
+  'leather jerkin': ['a leather jerkin cut down from someone larger, and less lucky'],
   staff: ['a staff of blackthorn that stays warm on cold nights'],
   hood: ['a hood they have not been seen without'],
   'kettle hat': ['a kettle hat with someone else’s name scratched inside it'],
@@ -215,6 +218,13 @@ const FEATS: Record<string, string[]> = {
     'Led a night raid on the enemy’s supply wagons and came back with forty barrels of the wrong thing.',
     'Talked a mutiny down from the walls, then joined the next one.',
     'Was first through the breach. Was also first back out, which is why they are still alive.',
+  ],
+  crossbowman: [
+    'Put a bolt through a herald’s banner at three hundred paces. The herald took the hint.',
+    'Held a gatehouse alone through a night with forty bolts and thirty-nine excuses for the fortieth.',
+    'Shot the rope on a hanging, mid-sentence. The sentence was not finished. Neither, it turned out, was the condemned.',
+    'Has never missed, by their own account. The account is long and contains several redefinitions of “miss.”',
+    'Brought down a wyvern-sized bird nobody could name. The company ate it. Nobody could name the taste either.',
   ],
   'hedge-wizard': [
     'Turned a river fog into something that ate a cavalry patrol. Has not repeated the trick, and goes quiet when asked.',

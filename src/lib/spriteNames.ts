@@ -8,6 +8,9 @@ import type { Slot } from './spriteParts.ts';
 const PART_WORDS: Record<string, string[]> = {
   falchion: ['Notch', 'Hack', 'Cleaver', 'Chopper'],
   spear: ['Skewer', 'Reach', 'Long', 'Prod'],
+  crossbow: ['Quarrel', 'Latch', 'Crank', 'Twang'],
+  'broad hat': ['Brim', 'Shady'],
+  'leather jerkin': ['Hide', 'Strap'],
   staff: ['Wick', 'Hex', 'Murmur', 'Cant'],
   hood: ['Cowl', 'Hush', 'Shade'],
   'kettle hat': ['Pot', 'Tin', 'Bucket'],

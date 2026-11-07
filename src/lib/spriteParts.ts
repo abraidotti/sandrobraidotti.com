@@ -143,6 +143,29 @@ function spearLevel(tipX: number, y: number, endX: number, handX: number): Run[]
   ];
 }
 
+/**
+ * A crossbow held across the body at the hip, moved by `dx`/`dy` for other poses. The string is
+ * drawn back to the nut when `cocked`, snapped straight otherwise; `bolt` lays one in the groove.
+ */
+function crossbow({ dx = 0, dy = 0, cocked = true, bolt = false } = {}): Run[] {
+  const string: Run[] = cocked
+    ? [[14, 8, 'x'], [15, 9, 'x'], [16, 10, 'x'], [19, 10, 'x'], [20, 9, 'x'], [21, 8, 'x']]
+    : [14, 15, 16, 19, 20, 21].map((y): Run => [y, 8, 'x']);
+  const runs: Run[] = [
+    // the prod (the bow), its tips swept back
+    [13, 7, 'r'], [14, 6, 'qr'], [15, 6, 'q'], [16, 6, 'p'], [17, 5, 'pp'], [18, 5, 'qq'], [19, 6, 'q'], [20, 6, 'q'], [21, 6, 'qr'], [22, 7, 'r'],
+    // the stock, butt tucked under the arm
+    [17, 7, 'ssssssss'], [18, 7, 'tttttttu'], [17, 15, 'tu'], [18, 15, 'uu'], [19, 15, 'uu'],
+    ...string,
+    ...(bolt ? ([[16, 3, 'pq'], [16, 5, 'sssss'], [16, 10, 'xy']] as Run[]) : []),
+    [17, 8, 'ab'], [18, 8, 'bc'],
+  ];
+  return runs.map(([y, x, px]) => [y + dy, x + dx, px]);
+}
+
+/** A quiver of bolts at the hip, fletchings showing. */
+const quiver: Run[] = [[17, 21, 'x'], [18, 20, 'xy'], [19, 20, 'nn'], [20, 20, 'mn'], [21, 20, 'mn'], [22, 20, 'mo'], [23, 20, 'oo']];
+
 /** Shift runs sideways, so glow effects follow a tilted staff's orb. */
 const shifted = (runs: Run[], dx: number): Run[] => runs.map(([y, x, px]) => [y, x + dx, px]);
 
@@ -272,6 +295,22 @@ export const PARTS: Part[] = [
         [12, 12, 'ghh'],
         [12, 17, 'hhhii'],
         [13, 12, 'ghhhhhhhii'],
+      ],
+    },
+  },
+
+  {
+    id: 'broad hat',
+    slot: 'headgear',
+    // Leather crown with a band, and a wide brim that shades the brows.
+    layers: {
+      main: [
+        [2, 14, 'mmnn'],
+        [3, 13, 'mnnnno'],
+        [4, 13, 'mnnnno'],
+        [5, 12, 'jkkkkkkl'],
+        [6, 9, 'mmnnnnnnnnnnnno'],
+        [7, 9, 'oo'], [7, 12, 'wwwww'], [7, 22, 'oo'],
       ],
     },
   },
@@ -557,6 +596,65 @@ export const PARTS: Part[] = [
     },
   },
   {
+    id: 'crossbow',
+    slot: 'weapon',
+    layers: { main: [...quiver, ...crossbow()] },
+    action: {
+      verb: 'loose',
+      frames: [
+        // Aim: up to the shoulder, a bolt in the groove, the far eye squeezed shut.
+        {
+          ms: 280,
+          runs: [
+            ...quiver,
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            ...crossbow({ dx: -2, dy: -5, bolt: true }),
+            [13, 8, 'gh'], [14, 8, 'ggh'],
+            [8, 16, 'c'],
+          ],
+        },
+        // Loose: the string snaps, the bolt is gone in a streak, the recoil rocks the body back.
+        {
+          ms: 90,
+          lean: -1,
+          runs: [
+            ...quiver,
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            ...crossbow({ dx: -1, dy: -5, cocked: false }),
+            [13, 9, 'gh'], [14, 9, 'ggh'],
+            [11, 1, '~~~'], [8, 1, '~'], [9, 2, '~'], [13, 2, '~'], [14, 1, '~'],
+            [8, 16, 'c'],
+          ],
+        },
+        // Kick: the nose jumps up from the recoil, the string still humming.
+        {
+          ms: 180,
+          lean: -1,
+          runs: [
+            ...quiver,
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            ...crossbow({ dx: 0, dy: -6, cocked: false }),
+            [12, 10, 'gh'], [13, 10, 'gh'], [14, 9, 'ggh'],
+            [10, 2, '~'],
+          ],
+        },
+        // Reload: nose down, foot in the stirrup, cranking the string back.
+        {
+          ms: 320,
+          runs: [
+            ...quiver,
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            ...[16, 17, 18, 19, 20, 21, 22, 23, 24].map((y): Run => [y, 9, 'st']),
+            [25, 5, 'rqqppppqqr'], [26, 5, 'r'], [26, 14, 'r'],
+            [24, 6, 'x'], [23, 7, 'x'], [22, 8, 'x'], [22, 11, 'x'], [23, 12, 'x'], [24, 13, 'x'],
+            [12, 11, 'q'], [13, 10, 'qr'],
+            [14, 9, 'ab'], [15, 9, 'bc'],
+          ],
+        },
+      ],
+    },
+  },
+  {
     id: 'staff',
     slot: 'weapon',
     layers: { main: staff(17) },
@@ -610,6 +708,37 @@ export const partById = (id: string): Part => {
   if (!part) throw new Error(`No sprite part "${id}"`);
   return part;
 };
+
+/**
+ * The leather jerkin takes the gambeson's cut for every build: leather over the chest, cloth
+ * sleeves, a trim belt, and a strap slung across from shoulder to hip.
+ */
+function jerkin(): Part {
+  const gambeson = partById('gambeson');
+  const chest: Record<Build, [number, number]> = { masculine: [12, 20], feminine: [12, 19], androgynous: [12, 19] };
+  const leather: Record<string, string> = { g: 'm', h: 'n', i: 'o' };
+  const belt: Record<string, string> = { m: 'j', n: 'k', o: 'l' };
+  const strap: Run[] = [[14, 19, 'k'], [15, 18, 'k'], [16, 17, 'k'], [17, 16, 'k'], [18, 15, 'k'], [19, 14, 'k']];
+  const convert = (runs: Run[], build: Build): Run[] => [
+    ...runs.flatMap(([y, x, pixels]) =>
+      [...pixels].map((ch, i): Run => {
+        const [left, right] = chest[build];
+        const col = x + i;
+        if (y === 20) return [y, col, belt[ch] ?? ch];
+        return [y, col, col >= left && col <= right ? (leather[ch] ?? ch) : ch];
+      }),
+    ),
+    ...strap,
+  ];
+  const main = (build: Build) => convert(partLayer(gambeson, build, 'main'), build);
+  return {
+    id: 'leather jerkin',
+    slot: 'torso',
+    layers: { main: main('masculine') },
+    variants: { feminine: { main: main('feminine') }, androgynous: { main: main('androgynous') } },
+  };
+}
+PARTS.push(jerkin());
 
 /** A colour ramp: light, base, shadow. */
 export type Ramp = [string, string, string];

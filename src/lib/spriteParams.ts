@@ -30,6 +30,19 @@ export const ARCHETYPES: Archetype[] = [
     },
   },
   {
+    id: 'crossbowman',
+    weight: 2,
+    parts: {
+      face: ['gaunt', 'long-haired', 'bearded'],
+      expression: EXPRESSIONS,
+      headgear: ['broad hat', 'broad hat', 'hood', null],
+      torso: ['leather jerkin'],
+      legs: ['trousers'],
+      cloak: [null, null, 'ragged cloak'],
+      weapon: ['crossbow'],
+    },
+  },
+  {
     id: 'hedge-wizard',
     weight: 2,
     parts: {
