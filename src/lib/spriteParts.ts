@@ -163,6 +163,17 @@ function crossbow({ dx = 0, dy = 0, cocked = true, bolt = false } = {}): Run[] {
   return runs.map(([y, x, px]) => [y + dy, x + dx, px]);
 }
 
+/** A warhammer held upright, the head (flat face forward, beak behind) `dy` rows lower than at rest. */
+function hammerUp(dy = 0): Run[] {
+  const head: Run[] = [[3, 5, 'pqqqqqr'], [4, 4, 'ppqqqqqrr'], [5, 5, 'rqqqqqr']];
+  const haft: Run[] = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((y) => [y, 8, 'st']);
+  return [
+    ...[...head, ...haft].map(([y, x, px]): Run => [y + dy, x, px]).filter(([y]) => y < 17),
+    ...fist,
+    [19, 8, 'tu'], [20, 8, 'tu'], [21, 8, 'tu'], [22, 8, 'qr'],
+  ];
+}
+
 /** A quiver of bolts at the hip, fletchings showing. */
 const quiver: Run[] = [[17, 21, 'x'], [18, 20, 'xy'], [19, 20, 'nn'], [20, 20, 'mn'], [21, 20, 'mn'], [22, 20, 'mo'], [23, 20, 'oo']];
 
@@ -311,6 +322,34 @@ export const PARTS: Part[] = [
         [5, 12, 'jkkkkkkl'],
         [6, 9, 'mmnnnnnnnnnnnno'],
         [7, 9, 'oo'], [7, 12, 'wwwww'], [7, 22, 'oo'],
+      ],
+    },
+  },
+
+  {
+    id: 'great helm',
+    slot: 'headgear',
+    // A battered barrel helm: a tattered plume streaming back, a riveted brow band over a shadowed
+    // eye slit (eyes glow through it on the corrupted), a nasal bar, breath holes, a dent, some rust.
+    layers: {
+      main: [
+        // plume
+        [1, 14, 'jk'], [2, 13, 'jkkl'], [2, 18, 'kkl'], [3, 19, 'kkll'], [4, 20, 'kll'], [5, 21, 'kl'], [6, 22, 'l'],
+        // crown with a ridge
+        [3, 13, 'pqpqqr'],
+        [4, 12, 'pqqpqqqr'],
+        [5, 11, 'pqqqpqqqrr'],
+        // riveted brow band, then the brow ridge's shadow over the slit
+        [6, 11, 'rprrprrprr'],
+        [7, 11, 'pqrrrrrqrr'],
+        // the slit, split by the nasal bar
+        [8, 11, 'qw*wp*wqrr'],
+        [9, 11, 'pqqrpqqqro'],
+        [10, 11, 'pqqqpqqqro'],
+        // breath holes either side of the bar
+        [11, 11, 'pwqwpwqwrr'],
+        [12, 12, 'qwqpqwrr'],
+        [13, 13, 'rrprr'],
       ],
     },
   },
@@ -655,6 +694,60 @@ export const PARTS: Part[] = [
     },
   },
   {
+    id: 'warhammer',
+    slot: 'weapon',
+    layers: { main: hammerUp() },
+    action: {
+      verb: 'smash',
+      frames: [
+        // Raise: heaved up overhead, the head hanging back past the shoulders; the body rocks back.
+        {
+          ms: 260,
+          lean: -1,
+          runs: [
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            [12, 10, 'g'], [13, 10, 'ghh'], [14, 10, 'ghhh'],
+            [8, 13, 'st'], [7, 14, 'st'], [6, 16, 'st'], [5, 18, 'st'], [4, 20, 'st'],
+            [1, 21, 'pqqqr'], [2, 20, 'pqqqqrr'], [3, 21, 'rqqqr'],
+            [9, 11, 'ab'], [10, 11, 'bc'],
+          ],
+        },
+        // Smash: brought down through a huge arc into the ground in front, the whole body behind it.
+        {
+          ms: 100,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [3, 9, '~~'], [4, 7, '~~'], [5, 5, '~~'], [6, 4, '~'], [7, 3, '~'],
+            ...[8, 9, 10, 11, 12].map((y): Run => [y, 2, '~']),
+            ...[13, 14, 15, 16, 17, 18, 19].map((y): Run => [y, 1, '~']),
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            [20, 7, 'st'], [21, 7, 'st'], [22, 6, 'st'], [23, 6, 'st'], [24, 5, 'st'],
+            [25, 2, 'pqqqr'], [26, 2, 'pqqqr'], [27, 2, 'pqqqr'], [28, 3, 'rr'], [24, 3, 'r'],
+            [18, 7, 'ab'], [19, 7, 'bc'],
+          ],
+        },
+        // Impact: held there as the ground cracks, stone chips fly and a shockwave of dust rolls out.
+        {
+          ms: 240,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            [20, 7, 'st'], [21, 7, 'st'], [22, 6, 'st'], [23, 6, 'st'], [24, 5, 'st'],
+            [25, 2, 'pqqqr'], [26, 2, 'pqqqr'], [27, 2, 'pqqqr'], [28, 3, 'rr'], [24, 3, 'r'],
+            [18, 7, 'ab'], [19, 7, 'bc'],
+            [29, 1, '~~~~~~~~~'], [28, 8, '~~'], [27, 10, '~'], [28, 1, '~'], [27, 1, '~'],
+            [22, 2, '~'], [23, 1, '~'], [21, 6, '~'], [20, 7, '~'],
+            [24, 9, 'v'], [22, 9, 'v'], [26, 10, 'v'], [21, 4, 'v'], [19, 2, 'v'],
+          ],
+        },
+        // Recover: dragged back up, the head still low and heavy.
+        { ms: 280, lean: 1, runs: hammerUp(4) },
+      ],
+    },
+  },
+  {
     id: 'staff',
     slot: 'weapon',
     layers: { main: staff(17) },
@@ -710,35 +803,61 @@ export const partById = (id: string): Part => {
 };
 
 /**
- * The leather jerkin takes the gambeson's cut for every build: leather over the chest, cloth
- * sleeves, a trim belt, and a strap slung across from shoulder to hip.
+ * A new part cut from an existing one, for every build: each pixel passes through `pixel`
+ * (which can recolour it), then `extra` runs are laid on top.
  */
-function jerkin(): Part {
-  const gambeson = partById('gambeson');
-  const chest: Record<Build, [number, number]> = { masculine: [12, 20], feminine: [12, 19], androgynous: [12, 19] };
-  const leather: Record<string, string> = { g: 'm', h: 'n', i: 'o' };
-  const belt: Record<string, string> = { m: 'j', n: 'k', o: 'l' };
-  const strap: Run[] = [[14, 19, 'k'], [15, 18, 'k'], [16, 17, 'k'], [17, 16, 'k'], [18, 15, 'k'], [19, 14, 'k']];
-  const convert = (runs: Run[], build: Build): Run[] => [
-    ...runs.flatMap(([y, x, pixels]) =>
-      [...pixels].map((ch, i): Run => {
-        const [left, right] = chest[build];
-        const col = x + i;
-        if (y === 20) return [y, col, belt[ch] ?? ch];
-        return [y, col, col >= left && col <= right ? (leather[ch] ?? ch) : ch];
-      }),
-    ),
-    ...strap,
+function recut(
+  baseId: string,
+  id: string,
+  pixel: (ch: string, x: number, y: number, build: Build) => string,
+  extra: (build: Build) => Run[] = () => [],
+): Part {
+  const base = partById(baseId);
+  const main = (build: Build): Run[] => [
+    ...partLayer(base, build, 'main').flatMap(([y, x, pixels]) => [...pixels].map((ch, i): Run => [y, x + i, pixel(ch, x + i, y, build)])),
+    ...extra(build),
   ];
-  const main = (build: Build) => convert(partLayer(gambeson, build, 'main'), build);
   return {
-    id: 'leather jerkin',
-    slot: 'torso',
+    id,
+    slot: base.slot,
     layers: { main: main('masculine') },
     variants: { feminine: { main: main('feminine') }, androgynous: { main: main('androgynous') } },
   };
 }
-PARTS.push(jerkin());
+
+const chestCols: Record<Build, [number, number]> = { masculine: [12, 20], feminine: [12, 19], androgynous: [12, 19] };
+const inChest = (x: number, build: Build) => x >= chestCols[build][0] && x <= chestCols[build][1];
+const recolour = (map: Record<string, string>) => (ch: string) => map[ch] ?? ch;
+
+// The leather jerkin: leather over the chest, cloth sleeves, a trim belt, a strap from shoulder to hip.
+PARTS.push(
+  recut(
+    'gambeson',
+    'leather jerkin',
+    (ch, x, y, build) => (y === 20 ? recolour({ m: 'j', n: 'k', o: 'l' })(ch) : inChest(x, build) ? recolour({ g: 'm', h: 'n', i: 'o' })(ch) : ch),
+    () => [[14, 19, 'k'], [15, 18, 'k'], [16, 17, 'k'], [17, 16, 'k'], [18, 15, 'k'], [19, 14, 'k']],
+  ),
+);
+
+// Chainmail: mail all over (a ring texture of alternating shades), the leather belt kept, and a
+// tattered tabard in trim hanging down the front.
+PARTS.push(
+  recut(
+    'gambeson',
+    'chainmail',
+    (ch, x, y) => {
+      const mail: Record<string, string> = { g: 'p', h: (x + y) % 2 ? 'q' : 'r', i: 'r' };
+      return y === 20 ? ch : (mail[ch] ?? ch);
+    },
+    () => [
+      [15, 14, 'jkkkl'], [16, 14, 'jkkkl'], [17, 14, 'jkkkl'], [18, 14, 'jkkkl'],
+      [21, 14, 'jkkkl'], [22, 14, 'k.k.l'],
+    ],
+  ),
+);
+
+// Greaves: metal over the shins, boots underneath.
+PARTS.push(recut('trousers', 'greaves', recolour({ j: 'p', k: 'q', l: 'r' })));
 
 /** A colour ramp: light, base, shadow. */
 export type Ramp = [string, string, string];

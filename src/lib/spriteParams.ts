@@ -43,6 +43,19 @@ export const ARCHETYPES: Archetype[] = [
     },
   },
   {
+    id: 'fallen knight',
+    weight: 2,
+    parts: {
+      face: ['gaunt', 'long-haired', 'bearded'],
+      expression: EXPRESSIONS,
+      headgear: ['great helm', 'great helm', 'kettle hat', null],
+      torso: ['chainmail'],
+      legs: ['greaves'],
+      cloak: [null, 'ragged cloak', 'ragged cloak'],
+      weapon: ['warhammer'],
+    },
+  },
+  {
     id: 'hedge-wizard',
     weight: 2,
     parts: {

@@ -196,6 +196,9 @@ const PART_ITEMS: Record<string, string[]> = {
   crossbow: ['a crossbow with eleven notches on the stock and room for many more', 'a quiver of bolts, each fletched by hand and named'],
   'broad hat': ['a broad hat that has stopped two arrows and one wedding'],
   'leather jerkin': ['a leather jerkin cut down from someone larger, and less lucky'],
+  warhammer: ['a warhammer reforged so often none of the original remains. They still call it by its first name'],
+  'great helm': ['a great helm with a dent the exact shape of a mace'],
+  chainmail: ['a mail shirt missing a hand’s width of rings over the heart, which they find funny'],
   staff: ['a staff of blackthorn that stays warm on cold nights'],
   hood: ['a hood they have not been seen without'],
   'kettle hat': ['a kettle hat with someone else’s name scratched inside it'],
@@ -225,6 +228,13 @@ const FEATS: Record<string, string[]> = {
     'Shot the rope on a hanging, mid-sentence. The sentence was not finished. Neither, it turned out, was the condemned.',
     'Has never missed, by their own account. The account is long and contains several redefinitions of “miss.”',
     'Brought down a wyvern-sized bird nobody could name. The company ate it. Nobody could name the taste either.',
+  ],
+  'fallen knight': [
+    'Was a knight once, with lands and a horse. Lost both in a single afternoon and one bad decision.',
+    'Unhorsed a champion at a tourney, then the champion’s brother, then the brother’s horse.',
+    'Broke a shield wall by walking into it and not stopping.',
+    'Still keeps the vigil of a dead order, alone, every midwinter.',
+    'Took a gate off its hinges in three blows. The gate is on display somewhere. They are not invited.',
   ],
   'hedge-wizard': [
     'Turned a river fog into something that ate a cavalry patrol. Has not repeated the trick, and goes quiet when asked.',
