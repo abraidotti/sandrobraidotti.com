@@ -20,7 +20,7 @@ const params = spriteParams(initial);
       <button type="button" class="pill-btn ghost" data-random>Random</button>
     </form>
     <figure class="sprite">
-      <div data-sprite-art set:html={renderSprite(params)} />
+      <button type="button" class="sprite-stage" data-sprite-art aria-label="Make them act" set:html={renderSprite(params)} />
       <figcaption>
         <h2 class="sprite-name" data-sprite-name>{displayName(params.name)}</h2>
         <p class="sprite-meta" data-sprite-meta>{describeSprite(params)}</p>
@@ -88,6 +88,23 @@ const params = spriteParams(initial);
   });
   reduce.addEventListener('change', showToggle);
   showToggle();
+
+  // A click plays the weapon's action once: each frame for its own duration, then back to idle.
+  // With motion paused, it just holds the key frame (the strike) for a moment.
+  let acting: number | undefined;
+  art.addEventListener('click', () => {
+    const svg = art.querySelector<SVGSVGElement>('svg');
+    const durations = svg?.dataset.actMs?.split(',').map(Number);
+    if (!svg || !durations) return;
+    clearTimeout(acting);
+    const steps = moving() ? durations.map((ms, i) => [i, ms]) : [[Math.min(1, durations.length - 1), 500]];
+    const play = (n: number) => {
+      if (n === steps.length) return delete svg.dataset.act;
+      svg.dataset.act = String(steps[n][0]);
+      acting = window.setTimeout(() => play(n + 1), steps[n][1]);
+    };
+    play(0);
+  });
 
   const query = new URLSearchParams(location.search);
   const name = query.get('name')?.trim();

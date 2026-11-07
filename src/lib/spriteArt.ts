@@ -5,7 +5,7 @@
 // Pure string output so it works both at build time (Astro) and in the browser (machines).
 
 import { dice } from './seed.ts';
-import { DEEP, DRAW_ORDER, EYE, GLOW, LEGEND, OUTLINE, SIZE, partById, partLayer } from './spriteParts.ts';
+import { DEEP, DRAW_ORDER, EYE, GLOW, LEGEND, OUTLINE, SIZE, SMEAR, partById, partLayer, type ActionFrame } from './spriteParts.ts';
 import { mix, type SpriteParams } from './spriteParams.ts';
 
 /** A frame: SIZE rows of SIZE colours, null where transparent. */
@@ -18,15 +18,28 @@ const HEM = 23;
 /** Seconds per breath; blinks land on a whole number of breaths so they stay in step. */
 const BREATH = 1.4;
 
-function charGrid(params: SpriteParams, sway = false): string[][] {
-  const grid = Array.from({ length: SIZE }, () => Array<string>(SIZE).fill('.'));
+/**
+ * Stacks the parts. With `sway`, the cloak's hem stirs. With an action frame, the weapon is replaced
+ * by the frame's drawing, laid over everything after the body leans.
+ */
+function charGrid(params: SpriteParams, { sway = false, action }: { sway?: boolean; action?: ActionFrame } = {}): string[][] {
+  let grid = Array.from({ length: SIZE }, () => Array<string>(SIZE).fill('.'));
   for (const [slot, layer] of DRAW_ORDER) {
     const id = params.parts[slot];
-    if (!id) continue;
+    if (!id || (action && slot === 'weapon' && layer === 'main')) continue;
     for (const [y, x, pixels] of partLayer(partById(id), params.build, layer)) {
       const shift = sway && slot === 'cloak' && layer === 'back' && y >= HEM ? 1 : 0;
       [...pixels].forEach((ch, i) => {
         if (ch !== '.') grid[y][x + i + shift] = ch;
+      });
+    }
+  }
+  if (action) {
+    const lean = action.lean ?? 0;
+    grid = grid.map((row, y) => (y <= WAIST ? row.map((_, x) => row[x + lean] ?? '.') : row));
+    for (const [y, x, pixels] of action.runs) {
+      [...pixels].forEach((ch, i) => {
+        if (ch !== '.') grid[y][x + i] = ch === '_' ? '.' : ch;
       });
     }
   }
@@ -60,16 +73,19 @@ function colour(params: SpriteParams, ch: string): string | null {
   if (meaning === 'brow') return brow(params);
   if (meaning === 'deep') return DEEP;
   if (meaning === 'glow') return glow;
+  if (meaning === 'smear') return SMEAR;
+  if (meaning === 'erase') return null;
   const [material, shade] = meaning;
   return params.palette[material][shade];
 }
 
+/** Outlines solid pixels only: a motion smear stays soft-edged. */
 function outline(frame: Frame): Frame {
   return frame.map((row, y) =>
     row.map((c, x) => {
       if (c) return c;
       const near = [frame[y - 1]?.[x], frame[y + 1]?.[x], row[x - 1], row[x + 1]];
-      return near.some(Boolean) ? OUTLINE : null;
+      return near.some((n) => n && n !== SMEAR) ? OUTLINE : null;
     }),
   );
 }
@@ -78,7 +94,7 @@ const glows = (params: SpriteParams, ch: string) => LEGEND[ch] === 'glow' || (pa
 
 /** The idle animation's two frames, with their eyelids and flares. */
 function frameSet(params: SpriteParams) {
-  const grids = [charGrid(params), breathe(charGrid(params, true))];
+  const grids = [charGrid(params), breathe(charGrid(params, { sway: true }))];
   const lid = params.palette.skin[2];
   const flare = mix(params.corrupted ? GLOW.corrupt : GLOW.ember, '#ffffff', 0.45);
   return grids.map((g) => ({
@@ -92,6 +108,16 @@ function frameSet(params: SpriteParams) {
 export function spriteFrames(params: SpriteParams): [Frame, Frame] {
   const [a, b] = frameSet(params);
   return [a.frame, b.frame];
+}
+
+/** The weapon's action, if it has one: its verb and each frame with its duration. */
+export function spriteAction(params: SpriteParams) {
+  const action = params.parts.weapon ? partById(params.parts.weapon).action : undefined;
+  if (!action) return undefined;
+  return {
+    verb: action.verb,
+    frames: action.frames.map((f) => ({ ms: f.ms, frame: outline(charGrid(params, { action: f }).map((row) => row.map((ch) => colour(params, ch)))) })),
+  };
 }
 
 function escapeXml(s: string): string {
@@ -122,8 +148,12 @@ export function renderSprite(params: SpriteParams): string {
     .join('');
   // Everyone blinks every few breaths, each on their own beat.
   const blinkDelay = -dice(`${params.seed}:blink`).int(0, 3) * BREATH;
+  // Action frames stay hidden until a click steps through them (see the sprite machine page).
+  const action = spriteAction(params);
+  const acts = action?.frames.map(({ frame }, i) => `<g class="act act-${i}">${rects(frame)}</g>`).join('') ?? '';
+  const actAttrs = action ? ` data-verb="${action.verb}" data-act-ms="${action.frames.map((f) => f.ms).join(',')}"` : '';
   return (
-    `<svg class="sprite-art" viewBox="0 0 ${SIZE} ${SIZE}" shape-rendering="crispEdges" role="img" aria-label="${label}" style="--blink-delay:${blinkDelay}s" xmlns="http://www.w3.org/2000/svg">` +
-    `${frames}</svg>`
+    `<svg class="sprite-art" viewBox="0 0 ${SIZE} ${SIZE}" shape-rendering="crispEdges" role="img" aria-label="${label}" style="--blink-delay:${blinkDelay}s"${actAttrs} xmlns="http://www.w3.org/2000/svg">` +
+    `${frames}${acts}</svg>`
   );
 }

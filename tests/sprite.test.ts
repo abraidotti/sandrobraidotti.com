@@ -20,6 +20,26 @@ test('parts use known pixels and keep a 1px margin for the outline', () => {
   }
 });
 
+test('action frames use known pixels, stay inside the margin, and have a duration', () => {
+  for (const part of PARTS.filter((p) => p.action)) {
+    assert.equal(part.slot, 'weapon', `${part.id}: only weapons act`);
+    for (const frame of part.action!.frames) {
+      assert.ok(frame.ms > 0, `${part.id}: frame without a duration`);
+      for (const [y, x, pixels] of frame.runs) {
+        assert.ok(y >= 1 && y <= SIZE - 2 && x >= 1 && x + pixels.length <= SIZE - 1, `${part.id}: action row ${y} outside the margin`);
+        for (const ch of pixels) assert.ok(ch === '.' || ch in LEGEND, `${part.id}: unknown pixel "${ch}"`);
+      }
+    }
+  }
+});
+
+test('a sword-carrier renders its attack, ready to play', () => {
+  const seed = MANY.find((s) => spriteParams(s).parts.weapon === 'falchion')!;
+  const svg = renderSprite(spriteParams(seed));
+  assert.match(svg, /data-verb="attack" data-act-ms="\d+,\d+,\d+"/);
+  for (const i of [0, 1, 2]) assert.ok(svg.includes(`class="act act-${i}"`), `missing action frame ${i}`);
+});
+
 test('archetypes only reference parts in the right slot', () => {
   for (const archetype of ARCHETYPES) {
     for (const [slot, ids] of Object.entries(archetype.parts)) {

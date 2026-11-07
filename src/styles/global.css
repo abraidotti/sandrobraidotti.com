@@ -826,6 +826,40 @@ main {
   animation-play-state: running;
 }
 
+/* Actions: while acting, the idle frames step aside and the current action frame shows. */
+.sprite-art .act {
+  visibility: hidden;
+}
+
+.sprite-art[data-act] .frame-a,
+.sprite-art[data-act] .frame-b {
+  animation: none;
+  visibility: hidden;
+}
+
+.sprite-art[data-act='0'] .act-0,
+.sprite-art[data-act='1'] .act-1,
+.sprite-art[data-act='2'] .act-2,
+.sprite-art[data-act='3'] .act-3,
+.sprite-art[data-act='4'] .act-4,
+.sprite-art[data-act='5'] .act-5 {
+  visibility: visible;
+}
+
+.sprite-stage {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.sprite-stage:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
 @keyframes sprite-blink {
   0% { opacity: 0; }
   97% { opacity: 1; }

@@ -6,6 +6,7 @@
 //
 //   skin a b c · hair d e f · cloth g h i · trim j k l · leather m n o · metal p q r · wood s t u
 //   (each light, base, shadow) · bone x y (light, shadow) · * eye · ^ brow · w deep shadow · v glow
+//   · in action frames: ~ motion smear · _ erase
 //
 // A part is a list of runs: [row, first column, pixels]. '.' inside a run is transparent.
 // The renderer adds the dark outline, so parts keep a 1px margin inside the canvas.
@@ -23,6 +24,14 @@ export const BUILDS: Build[] = ['masculine', 'feminine', 'androgynous'];
 
 type Layers = Partial<Record<Layer, Run[]>>;
 
+/** One frame of an action: the weapon (and the hand on it) redrawn, drawn over everything else. */
+export interface ActionFrame {
+  runs: Run[];
+  ms: number;
+  /** The upper body leans forward (left) this many pixels. */
+  lean?: number;
+}
+
 export interface Part {
   id: string;
   slot: Slot;
@@ -31,6 +40,8 @@ export interface Part {
   variants?: Partial<Record<Build, Layers>>;
   /** Only these builds can wear it (default: all). */
   builds?: Build[];
+  /** Weapons: what a click makes the character do. */
+  action?: { verb: string; frames: ActionFrame[] };
 }
 
 export const partLayer = (part: Part, build: Build, layer: Layer): Run[] =>
@@ -52,7 +63,7 @@ export const DRAW_ORDER: [Slot, Layer][] = [
 export type Material = 'skin' | 'hair' | 'cloth' | 'trim' | 'leather' | 'metal' | 'wood' | 'bone';
 
 /** What each pixel character means: a material and shade (0 light, 1 base, 2 shadow), or a special. */
-export const LEGEND: Record<string, [Material, number] | 'eye' | 'brow' | 'deep' | 'glow'> = {
+export const LEGEND: Record<string, [Material, number] | 'eye' | 'brow' | 'deep' | 'glow' | 'smear' | 'erase'> = {
   a: ['skin', 0], b: ['skin', 1], c: ['skin', 2],
   d: ['hair', 0], e: ['hair', 1], f: ['hair', 2],
   g: ['cloth', 0], h: ['cloth', 1], i: ['cloth', 2],
@@ -65,6 +76,9 @@ export const LEGEND: Record<string, [Material, number] | 'eye' | 'brow' | 'deep'
   '^': 'brow',
   w: 'deep',
   v: 'glow',
+  // Action frames only: '~' a pale motion smear, '_' clears what's beneath (e.g. the resting forearm).
+  '~': 'smear',
+  _: 'erase',
 };
 
 const fist: Run[] = [
@@ -375,18 +389,60 @@ export const PARTS: Part[] = [
   {
     id: 'falchion',
     slot: 'weapon',
+    // A single-edged blade: lit cutting edge on the left, a belly swelling toward the clipped tip.
     layers: {
       main: [
-        [4, 9, 'p'],
-        [5, 8, 'pq'],
+        [3, 9, 'q'],
+        [4, 8, 'pq'],
+        [5, 7, 'ppq'],
         [6, 7, 'ppq'],
-        [7, 7, 'pqq'],
+        [7, 7, 'ppr'],
         [8, 7, 'pqr'],
         ...[9, 10, 11, 12, 13, 14, 15].map((y): Run => [y, 8, 'pr']),
-        [16, 6, 'rqqqqr'],
+        [16, 7, 'rqqr'],
         ...fist,
-        [19, 8, 'no'],
-        [20, 8, 'qr'],
+        [19, 8, 'qr'],
+      ],
+    },
+    action: {
+      verb: 'attack',
+      frames: [
+        // Wind-up: blade raised high, the forearm lifted from the shoulder.
+        {
+          ms: 170,
+          runs: [
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            [1, 9, 'q'], [2, 8, 'pq'], [3, 7, 'ppq'], [4, 7, 'ppq'], [5, 7, 'pqr'],
+            ...[6, 7, 8, 9].map((y): Run => [y, 8, 'pr']),
+            [10, 7, 'rqqr'],
+            [11, 8, 'ab'], [12, 8, 'bc'],
+            [13, 9, 'gh'], [14, 9, 'ggh'],
+          ],
+        },
+        // Strike: lunging forward, the blade swept down through a pale arc.
+        {
+          ms: 150,
+          lean: 1,
+          runs: [
+            [16, 8, '___'], [17, 8, '___'], [18, 8, '___'],
+            [2, 6, '~~'], [3, 5, '~~'], [4, 4, '~~'], [5, 3, '~~'], [6, 3, '~'], [7, 2, '~~'],
+            ...[8, 9, 10, 11].map((y): Run => [y, 2, '~']),
+            [12, 2, '~~'], [13, 2, '~~'], [14, 2, '~~'], [15, 2, '~~'], [16, 3, '~'],
+            [15, 7, 'ggh'], [16, 7, 'ghh'],
+            [15, 5, 'ab'], [16, 5, 'bc'],
+            [17, 4, 'rq'],
+            [18, 3, 'pq'], [19, 3, 'pq'], [20, 2, 'ppq'], [21, 2, 'pqr'], [22, 2, 'pq'], [23, 2, 'pr'], [24, 2, 'q'],
+          ],
+        },
+        // Recover: blade lowered, point down, before settling back to guard.
+        {
+          ms: 200,
+          runs: [
+            [18, 7, 'ab'], [19, 7, 'bc'],
+            [20, 6, 'rqqr'],
+            [21, 7, 'pr'], [22, 7, 'pr'], [23, 7, 'pr'], [24, 6, 'ppr'], [25, 6, 'ppq'], [26, 6, 'pq'], [27, 7, 'q'],
+          ],
+        },
       ],
     },
   },
@@ -463,3 +519,4 @@ export const OUTLINE = '#140f11';
 export const EYE = '#1c1416';
 export const DEEP = '#241c1e';
 export const GLOW = { ember: '#f0a040', corrupt: '#9be06a' };
+export const SMEAR = '#efe9dc';
