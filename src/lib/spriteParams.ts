@@ -108,7 +108,7 @@ export const ARCHETYPES: Archetype[] = [
       face: ['gaunt', 'long-haired'],
       expression: ['grim'],
       mark: [null],
-      headgear: ['mask'],
+      headgear: ['mask', 'horned mask', 'weeping mask'],
       torso: ['robe'],
       legs: ['robe skirt'],
       cloak: ['ragged cloak', 'ragged cloak', null],
@@ -123,7 +123,7 @@ export const ARCHETYPES: Archetype[] = [
     label: 'a forvalaka',
     parts: {
       face: [null], expression: [null], mark: [null], headgear: [null], torso: [null], legs: [null], cloak: [null],
-      weapon: ['forvalaka'],
+      weapon: ['forvalaka', 'clouded forvalaka', 'king forvalaka'],
     },
   },
 ];

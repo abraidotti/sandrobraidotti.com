@@ -235,6 +235,81 @@ const beastTail: Run[] = [
 ];
 const moved = (runs: Run[], dx: number, dy: number): Run[] => runs.map(([y, x, px]) => [y + dy, x + dx, px]);
 
+/** A coat pattern: given a fur pixel's position on the resting beast, what it becomes. */
+type Coat = (x: number, y: number, ch: string) => string;
+const fur = (ch: string) => 'dew'.includes(ch);
+/** The rosettes as drawn. */
+const ROSETTES: Coat = (_x, _y, ch) => ch;
+/** Clouded: broken diagonal bands of large dark blotches. */
+const CLOUDED: Coat = (x, y, ch) => {
+  if (!fur(ch)) return ch;
+  const base = ch === 'w' ? 'e' : ch;
+  if (y % 4 === 3) return base;
+  const band = (x + y) % 7;
+  return band === 0 ? 'w' : band === 1 || band === 6 ? 'f' : base;
+};
+/** King: the rosettes run together into a dark stripe down the spine and bars down the flanks. */
+const KING: Coat = (x, y, ch) => {
+  if (!fur(ch)) return ch;
+  const base = ch === 'w' ? 'e' : ch;
+  if (y <= 16 && x >= 13 && x % 5 !== 0) return 'w';
+  if (y >= 17 && y <= 20 && x % 4 === 1) return 'w';
+  return base;
+};
+
+/** A forvalaka in a given coat, with its pounce. The coat is laid on before the body moves, so it moves with it. */
+function forvalaka(id: string, coat: Coat): Part {
+  const wear = (runs: Run[]): Run[] => runs.map(([y, x, px]) => [y, x, [...px].map((ch, i) => coat(x + i, y, ch)).join('')]);
+  const head = beastHead, legs = beastLegs, body = wear(beastBody), tail = wear(beastTail);
+  return {
+    id,
+    slot: 'weapon',
+    layers: { main: [...tail, ...body, ...legs, ...head] },
+    action: {
+      verb: 'pounce',
+      frames: [
+        // Crouch: belly to the ground, haunches bunched, tail lashing low.
+        {
+          ms: 260,
+          runs: [
+            ...moved(tail, 1, 3), ...moved(body, 0, 3), ...moved(head, 0, 3),
+            [25, 8, 'eef'], [26, 8, 'eef'], [27, 7, 'deef'], [28, 7, 'deef'], [29, 7, 'xxx'],
+            [25, 12, 'ff'], [26, 12, 'ff'], [27, 12, 'ff'], [28, 12, 'eff'], [29, 12, 'xx'],
+            [25, 18, 'eeeeee'], [26, 19, 'eeeeef'], [27, 20, 'eeef'], [28, 19, 'deeef'], [29, 19, 'xxxx'],
+            [27, 24, 'ff'], [28, 24, 'eff'], [29, 24, 'xx'],
+          ],
+        },
+        // Leap: launched forward, forelegs reaching, hind legs and tail streaming out behind.
+        {
+          ms: 130,
+          runs: [
+            [14, 25, 'eef'], [13, 27, 'eff'], [12, 29, 'e'],
+            ...moved(body, -1, -4), ...moved(head, -1, -4),
+            [18, 6, 'eeff'], [19, 4, 'eef'], [20, 2, 'deef'], [21, 1, 'xx'],
+            [19, 8, 'ff'], [20, 6, 'ff'], [21, 4, 'eff'], [22, 3, 'xx'],
+            [18, 18, 'eeeee'], [19, 21, 'eeef'], [20, 24, 'eef'], [21, 26, 'ef'], [22, 28, 'xx'],
+            [22, 14, '~~~~'], [24, 17, '~~~~~'], [26, 13, '~~~'],
+          ],
+        },
+        // Rake: claws flashing through three bright arcs.
+        {
+          ms: 180,
+          runs: [
+            ...moved(tail, 0, -1), ...moved(body, -1, -1), ...moved(head, -1, -1),
+            [21, 6, 'eef'], [20, 4, 'eef'], [19, 3, 'xx'],
+            ...moved(legs.filter(([y, x]) => x > 11 || y < 22), -1, -1).filter(([y]) => y <= 29),
+            [14, 4, '~'], [15, 3, '~'], [16, 2, '~'], [17, 1, '~'],
+            [16, 5, '~'], [17, 4, '~'], [18, 3, '~'], [19, 2, '~'],
+            [18, 6, '~'], [19, 5, '~'], [20, 4, '~'], [21, 3, '~'],
+          ],
+        },
+        // Land: back on all fours, dust settling.
+        { ms: 260, runs: [...tail, ...body, ...legs, ...head, [29, 4, '~~'], [28, 3, '~'], [29, 17, '~~']] },
+      ],
+    },
+  };
+}
+
 /** A quiver of bolts at the hip, fletchings showing. */
 const quiver: Run[] = [[17, 21, 'x'], [18, 20, 'xy'], [19, 20, 'nn'], [20, 20, 'mn'], [21, 20, 'mn'], [22, 20, 'mo'], [23, 20, 'oo']];
 
@@ -456,6 +531,48 @@ export const PARTS: Part[] = [
         [11, 12, 'pqqqqr'],
         [12, 13, 'qqqr'],
         [13, 14, 'qr'],
+      ],
+    },
+  },
+
+  {
+    id: 'horned mask',
+    slot: 'headgear',
+    // Iron, with heavy bone horns sweeping out from the temples and up, and slanted eye slits.
+    layers: {
+      main: [
+        [1, 10, 'x'], [1, 20, 'x'],
+        [2, 9, 'xy'], [2, 20, 'xy'],
+        [3, 9, 'yy'], [3, 20, 'yy'],
+        [4, 10, 'yyy'], [4, 18, 'yyy'],
+        [5, 11, 'yypqqqyy'],
+        [6, 12, 'pqqqqqqr'],
+        [7, 12, 'pq*q*qqr'],
+        [8, 12, 'p*qqq*rr'],
+        [9, 11, 'ppqqqqqr'],
+        [10, 12, 'pqqqqqr'],
+        [11, 12, 'pqrrrqr'],
+        [12, 13, 'qqqr'],
+        [13, 14, 'qr'],
+      ],
+    },
+  },
+  {
+    id: 'weeping mask',
+    slot: 'headgear',
+    // Smooth white porcelain, no mouth, black tears running from the eyes.
+    layers: {
+      main: [
+        [4, 13, 'xxxy'],
+        [5, 12, 'xxxxxy'],
+        [6, 12, 'xxxxxxy'],
+        [7, 12, 'xxxxxxyy'],
+        [8, 12, 'x*xx*xyy'],
+        [9, 11, 'xxwxxwxy'],
+        [10, 12, 'xwxxwxy'],
+        [11, 12, 'xwxxwy'],
+        [12, 13, 'wxxw'],
+        [13, 14, 'xy'],
       ],
     },
   },
@@ -932,53 +1049,9 @@ export const PARTS: Part[] = [
       ],
     },
   },
-  {
-    id: 'forvalaka',
-    slot: 'weapon',
-    layers: { main: [...beastTail, ...beastBody, ...beastLegs, ...beastHead] },
-    action: {
-      verb: 'pounce',
-      frames: [
-        // Crouch: belly to the ground, haunches bunched, tail lashing low.
-        {
-          ms: 260,
-          runs: [
-            ...moved(beastTail, 1, 3), ...moved(beastBody, 0, 3), ...moved(beastHead, 0, 3),
-            [25, 8, 'eef'], [26, 8, 'eef'], [27, 7, 'deef'], [28, 7, 'deef'], [29, 7, 'xxx'],
-            [25, 12, 'ff'], [26, 12, 'ff'], [27, 12, 'ff'], [28, 12, 'eff'], [29, 12, 'xx'],
-            [25, 18, 'eeeeee'], [26, 19, 'eeeeef'], [27, 20, 'eeef'], [28, 19, 'deeef'], [29, 19, 'xxxx'],
-            [27, 24, 'ff'], [28, 24, 'eff'], [29, 24, 'xx'],
-          ],
-        },
-        // Leap: launched forward, forelegs reaching, hind legs and tail streaming out behind.
-        {
-          ms: 130,
-          runs: [
-            [14, 25, 'eef'], [13, 27, 'eff'], [12, 29, 'e'],
-            ...moved(beastBody, -1, -4), ...moved(beastHead, -1, -4),
-            [18, 6, 'eeff'], [19, 4, 'eef'], [20, 2, 'deef'], [21, 1, 'xx'],
-            [19, 8, 'ff'], [20, 6, 'ff'], [21, 4, 'eff'], [22, 3, 'xx'],
-            [18, 18, 'eeeee'], [19, 21, 'eeef'], [20, 24, 'eef'], [21, 26, 'ef'], [22, 28, 'xx'],
-            [22, 14, '~~~~'], [24, 17, '~~~~~'], [26, 13, '~~~'],
-          ],
-        },
-        // Rake: claws flashing through three bright arcs.
-        {
-          ms: 180,
-          runs: [
-            ...moved(beastTail, 0, -1), ...moved(beastBody, -1, -1), ...moved(beastHead, -1, -1),
-            [21, 6, 'eef'], [20, 4, 'eef'], [19, 3, 'xx'],
-            ...moved(beastLegs.filter(([y, x]) => x > 11 || y < 22), -1, -1).filter(([y]) => y <= 29),
-            [14, 4, '~'], [15, 3, '~'], [16, 2, '~'], [17, 1, '~'],
-            [16, 5, '~'], [17, 4, '~'], [18, 3, '~'], [19, 2, '~'],
-            [18, 6, '~'], [19, 5, '~'], [20, 4, '~'], [21, 3, '~'],
-          ],
-        },
-        // Land: back on all fours, dust settling.
-        { ms: 260, runs: [...beastTail, ...beastBody, ...beastLegs, ...beastHead, [29, 4, '~~'], [28, 3, '~'], [29, 17, '~~']] },
-      ],
-    },
-  },
+  forvalaka('forvalaka', ROSETTES),
+  forvalaka('clouded forvalaka', CLOUDED),
+  forvalaka('king forvalaka', KING),
   {
     id: 'staff',
     slot: 'weapon',

@@ -136,7 +136,7 @@ test('the Taken are always corrupted and masked; the forvalaka is rare', () => {
   const lots = Array.from({ length: 3000 }, (_, i) => spriteParams(`rare-${i}`));
   const taken = lots.filter((p) => p.archetype === 'taken');
   const beasts = lots.filter((p) => p.archetype === 'forvalaka');
-  assert.ok(taken.length > 0 && taken.every((p) => p.corrupted && p.parts.headgear === 'mask'));
+  assert.ok(taken.length > 0 && taken.every((p) => p.corrupted && p.parts.headgear?.endsWith('mask')));
   assert.ok(beasts.length > 0 && beasts.length < lots.length * 0.03, `${beasts.length} forvalaka in ${lots.length}`);
 });
 
