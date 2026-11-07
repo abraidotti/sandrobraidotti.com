@@ -13,12 +13,15 @@ export interface Archetype {
   parts: Record<Slot, (string | null)[]>;
 }
 
+const EXPRESSIONS = ['grim', 'scowling', 'weary', 'snarling', 'haunted', 'smirking'];
+
 export const ARCHETYPES: Archetype[] = [
   {
     id: 'sellsword',
     weight: 3,
     parts: {
       face: ['gaunt', 'bearded'],
+      expression: EXPRESSIONS,
       headgear: [null, 'kettle hat', 'kettle hat', 'hood'],
       torso: ['gambeson'],
       legs: ['trousers'],
@@ -31,6 +34,7 @@ export const ARCHETYPES: Archetype[] = [
     weight: 2,
     parts: {
       face: ['gaunt', 'bearded'],
+      expression: EXPRESSIONS,
       headgear: ['hood', 'hood', null],
       torso: ['robe'],
       legs: ['robe skirt'],
@@ -53,10 +57,10 @@ export interface SpriteParams {
   corrupted: boolean;
 }
 
-const SLOTS: Slot[] = ['face', 'headgear', 'torso', 'legs', 'cloak', 'weapon'];
+const SLOTS: Slot[] = ['face', 'expression', 'headgear', 'torso', 'legs', 'cloak', 'weapon'];
 
 /** Mix a hex colour toward another by `t` (0-1). */
-function mix(a: string, b: string, t: number): string {
+export function mix(a: string, b: string, t: number): string {
   const ch = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
   return '#' + [0, 1, 2].map((i) => Math.round(ch(a, i) + (ch(b, i) - ch(a, i)) * t).toString(16).padStart(2, '0')).join('');
 }

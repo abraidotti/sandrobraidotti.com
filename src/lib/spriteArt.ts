@@ -3,7 +3,7 @@
 // Pure string output so it works both at build time (Astro) and in the browser (machines).
 
 import { DEEP, DRAW_ORDER, EYE, GLOW, LEGEND, OUTLINE, SIZE, partById } from './spriteParts.ts';
-import type { SpriteParams } from './spriteParams.ts';
+import { mix, type SpriteParams } from './spriteParams.ts';
 
 /** A frame: SIZE rows of SIZE colours, null where transparent. */
 export type Frame = (string | null)[][];
@@ -35,11 +35,21 @@ function breathe(grid: string[][]): string[][] {
   );
 }
 
+const luminance = (hex: string) => [1, 3, 5].reduce((sum, i, k) => sum + parseInt(hex.slice(i, i + 2), 16) * [0.3, 0.59, 0.11][k], 0);
+
+/** Brows always sit darker than the skin: the hair's shadow, or a deepened skin shadow if that's darker. */
+function brow(params: SpriteParams): string {
+  const hair = params.palette.hair[2];
+  const skin = mix(params.palette.skin[2], OUTLINE, 0.45);
+  return luminance(hair) < luminance(skin) ? hair : skin;
+}
+
 function colour(params: SpriteParams, ch: string): string | null {
   if (ch === '.') return null;
   const meaning = LEGEND[ch];
   const glow = params.corrupted ? GLOW.corrupt : GLOW.ember;
   if (meaning === 'eye') return params.corrupted ? glow : EYE;
+  if (meaning === 'brow') return brow(params);
   if (meaning === 'deep') return DEEP;
   if (meaning === 'glow') return glow;
   const [material, shade] = meaning;

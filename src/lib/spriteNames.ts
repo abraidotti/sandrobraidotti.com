@@ -12,6 +12,12 @@ const PART_WORDS: Record<string, string[]> = {
   'kettle hat': ['Pot', 'Tin', 'Bucket'],
   bearded: ['Whisker', 'Bristle', 'Thatch'],
   'ragged cloak': ['Tatters', 'Rags', 'Flap'],
+  grim: ['Dour', 'Stony'],
+  scowling: ['Sour', 'Glower'],
+  weary: ['Droop', 'Yawn'],
+  snarling: ['Fang', 'Snarl'],
+  haunted: ['Twitch', 'Startle'],
+  smirking: ['Smirk', 'Sly'],
 };
 
 const SINGLE = [

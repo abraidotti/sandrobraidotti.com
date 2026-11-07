@@ -5,14 +5,14 @@
 // picks a palette ramp per material. One character per pixel:
 //
 //   skin a b c · hair d e f · cloth g h i · trim j k l · leather m n o · metal p q r · wood s t u
-//   (each light, base, shadow) · bone x y (light, shadow) · * eye · w deep shadow · v glow
+//   (each light, base, shadow) · bone x y (light, shadow) · * eye · ^ brow · w deep shadow · v glow
 //
 // A part is a list of runs: [row, first column, pixels]. '.' inside a run is transparent.
 // The renderer adds the dark outline, so parts keep a 1px margin inside the canvas.
 
 export const SIZE = 32;
 
-export type Slot = 'cloak' | 'weapon' | 'legs' | 'torso' | 'face' | 'headgear';
+export type Slot = 'cloak' | 'weapon' | 'legs' | 'torso' | 'face' | 'expression' | 'headgear';
 /** 'back' sits behind the body; 'main' is the part itself. */
 export type Layer = 'back' | 'main';
 export type Run = [y: number, x: number, pixels: string];
@@ -30,6 +30,7 @@ export const DRAW_ORDER: [Slot, Layer][] = [
   ['legs', 'main'],
   ['torso', 'main'],
   ['face', 'main'],
+  ['expression', 'main'],
   ['headgear', 'main'],
   ['cloak', 'main'],
   ['weapon', 'main'],
@@ -38,7 +39,7 @@ export const DRAW_ORDER: [Slot, Layer][] = [
 export type Material = 'skin' | 'hair' | 'cloth' | 'trim' | 'leather' | 'metal' | 'wood' | 'bone';
 
 /** What each pixel character means: a material and shade (0 light, 1 base, 2 shadow), or a special. */
-export const LEGEND: Record<string, [Material, number] | 'eye' | 'deep' | 'glow'> = {
+export const LEGEND: Record<string, [Material, number] | 'eye' | 'brow' | 'deep' | 'glow'> = {
   a: ['skin', 0], b: ['skin', 1], c: ['skin', 2],
   d: ['hair', 0], e: ['hair', 1], f: ['hair', 2],
   g: ['cloth', 0], h: ['cloth', 1], i: ['cloth', 2],
@@ -48,6 +49,7 @@ export const LEGEND: Record<string, [Material, number] | 'eye' | 'deep' | 'glow'
   s: ['wood', 0], t: ['wood', 1], u: ['wood', 2],
   x: ['bone', 0], y: ['bone', 1],
   '*': 'eye',
+  '^': 'brow',
   w: 'deep',
   v: 'glow',
 };
@@ -59,6 +61,8 @@ const fist: Run[] = [
 
 export const PARTS: Part[] = [
   // ---------- faces ----------
+  // Faces are bare: the expression slot draws brows (row 7), eyes (row 8: near eye x13-14, far eye
+  // x16-17) and the mouth (around row 11, x13-16) on top, so any expression fits any face.
   {
     id: 'gaunt',
     slot: 'face',
@@ -68,11 +72,12 @@ export const PARTS: Part[] = [
         [5, 13, 'deeeeef'],
         [6, 12, 'ddeeeeeff'],
         [7, 12, 'aabbbbeef'],
-        [8, 12, 'b*bb*bcef'],
+        [8, 12, 'abbbbbcef'],
         [9, 11, 'babbbbbcef'],
-        [10, 12, 'abbcbbcf'],
-        [11, 13, 'bbbbcc'],
-        [12, 14, 'cccc'],
+        [10, 12, 'abbbbcbf'],
+        [11, 12, 'abbbbbc'],
+        [12, 13, 'bbbcc'],
+        [13, 14, 'ccc'],
       ],
     },
   },
@@ -85,14 +90,46 @@ export const PARTS: Part[] = [
         [5, 13, 'deeeeef'],
         [6, 12, 'ddeeeeeff'],
         [7, 12, 'aabbbbeef'],
-        [8, 12, 'b*bb*bcef'],
+        [8, 12, 'abbbbbcef'],
         [9, 11, 'babbbbbcef'],
-        [10, 12, 'beeeeecf'],
+        [10, 12, 'bbeeebcf'],
         [11, 12, 'deeeeef'],
         [12, 13, 'eeeef'],
         [13, 14, 'fef'],
       ],
     },
+  },
+
+  // ---------- expressions ----------
+  {
+    id: 'grim',
+    slot: 'expression',
+    layers: { main: [[7, 13, '^^'], [7, 16, '^^'], [8, 13, '*'], [8, 16, '*'], [11, 13, 'cwwc']] },
+  },
+  {
+    id: 'scowling',
+    slot: 'expression',
+    layers: { main: [[7, 13, 'c^^'], [7, 16, '^'], [8, 13, '*c'], [8, 16, '*c'], [11, 14, 'ww'], [12, 13, 'c'], [12, 16, 'c']] },
+  },
+  {
+    id: 'weary',
+    slot: 'expression',
+    layers: { main: [[7, 13, '^^'], [7, 16, '^'], [8, 13, '*'], [8, 16, '*'], [9, 13, 'c'], [9, 16, 'c'], [11, 14, 'ww']] },
+  },
+  {
+    id: 'snarling',
+    slot: 'expression',
+    layers: { main: [[7, 13, 'c^^'], [7, 16, '^'], [8, 13, '*c'], [8, 16, '*c'], [10, 13, 'c'], [11, 13, 'wxxw']] },
+  },
+  {
+    id: 'haunted',
+    slot: 'expression',
+    layers: { main: [[7, 12, '^'], [7, 17, '^'], [8, 13, '*'], [8, 16, '*'], [11, 14, 'w'], [12, 14, 'w']] },
+  },
+  {
+    id: 'smirking',
+    slot: 'expression',
+    layers: { main: [[7, 13, '^^'], [7, 16, '^^'], [8, 13, '*'], [8, 16, '*c'], [11, 13, 'cww'], [10, 16, 'w']] },
   },
 
   // ---------- headgear ----------
