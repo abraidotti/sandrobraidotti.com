@@ -11,6 +11,14 @@ export interface Archetype {
   weight: number;
   /** Allowed part ids per slot; null means the slot can be empty. Repeats weight the pick. */
   parts: Record<Slot, (string | null)[]>;
+  /** Restricts these materials to the named ramps. */
+  palette?: Partial<Record<Material, string[]>>;
+  /** Always (or never) corrupted, instead of one in five. */
+  corrupted?: boolean;
+  /** Corrupted without blighting the palette (for archetypes already dressed in the dark). */
+  unblighted?: boolean;
+  /** How the character is described, instead of "a [corrupted] <id>". */
+  label?: string;
 }
 
 const EXPRESSIONS = ['grim', 'scowling', 'weary', 'snarling', 'haunted', 'smirking'];
@@ -88,6 +96,36 @@ export const ARCHETYPES: Archetype[] = [
       weapon: ['staff'],
     },
   },
+  {
+    // Sorcerers bound to a dark master: masked, always corrupted, robed in dark colours.
+    id: 'taken',
+    weight: 1,
+    corrupted: true,
+    unblighted: true,
+    label: 'one of the Taken',
+    palette: { cloth: ['soot', 'slate', 'oxblood'], trim: ['soot', 'slate', 'oxblood'] },
+    parts: {
+      face: ['gaunt', 'long-haired'],
+      expression: ['grim'],
+      mark: [null],
+      headgear: ['mask'],
+      torso: ['robe'],
+      legs: ['robe skirt'],
+      cloak: ['ragged cloak', 'ragged cloak', null],
+      weapon: ['sorcery'],
+    },
+  },
+  {
+    // A wereleopard. Very rare. The whole beast is one part, so it can move as one.
+    id: 'forvalaka',
+    weight: 0.15,
+    corrupted: false,
+    label: 'a forvalaka',
+    parts: {
+      face: [null], expression: [null], mark: [null], headgear: [null], torso: [null], legs: [null], cloak: [null],
+      weapon: ['forvalaka'],
+    },
+  },
 ];
 
 export interface SpriteParams {
@@ -130,7 +168,10 @@ export function spriteParams(input: string, typed = false): SpriteParams {
   }
 
   const ramp = (material: Material, except?: Ramp) => {
-    const options = Object.values(RAMPS[material]).filter((r) => r !== except);
+    const allowed = archetype.palette?.[material];
+    const options = Object.entries(RAMPS[material])
+      .filter(([name, r]) => (!allowed || allowed.includes(name)) && r !== except)
+      .map(([, r]) => r);
     return pick(options);
   };
   const cloth = ramp('cloth');
@@ -145,9 +186,9 @@ export function spriteParams(input: string, typed = false): SpriteParams {
     bone: ramp('bone'),
   };
 
-  // About one in five comes out wrong.
-  const corrupted = rand() < 0.2;
-  if (corrupted) {
+  // About one in five comes out wrong, unless the archetype decides.
+  const corrupted = archetype.corrupted ?? rand() < 0.2;
+  if (corrupted && !archetype.unblighted) {
     palette = Object.fromEntries(
       Object.entries(palette).map(([m, r]) => [m, r.map((c) => mix(c, m === 'skin' ? '#5c6a58' : '#2a3428', m === 'skin' ? 0.5 : 0.35)) as Ramp]),
     ) as Record<Material, Ramp>;
@@ -163,8 +204,13 @@ export function displayName(name: string): string {
   return name.length > NAME_MAX ? name.slice(0, NAME_MAX - 1) + '…' : name;
 }
 
+/** e.g. "a corrupted hedge-wizard", or the archetype's own label ("one of the Taken"). */
+export function kindOf(params: SpriteParams): string {
+  return ARCHETYPES.find((a) => a.id === params.archetype)?.label ?? `a ${params.corrupted ? 'corrupted ' : ''}${params.archetype}`;
+}
+
 /** e.g. "a corrupted hedge-wizard · seed 1a2b3c4" */
 export function describeSprite(params: SpriteParams): string {
-  const kind = `a ${params.corrupted ? 'corrupted ' : ''}${params.archetype}`;
+  const kind = kindOf(params);
   return params.typed ? kind : `${kind} · seed ${params.seed.slice(0, 7)}`;
 }

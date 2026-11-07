@@ -83,8 +83,9 @@ test('frames are 32×32 and the second one breathes', () => {
 });
 
 test('every sprite can blink, and glowing pixels can flicker', () => {
-  for (const seed of MANY.slice(0, 50)) {
+  for (const seed of MANY.slice(0, 80)) {
     const p = spriteParams(seed);
+    if (p.archetype === 'forvalaka') continue; // cats stare
     const svg = renderSprite(p);
     // Both frames close both eyes.
     assert.equal((svg.match(/<g class="lids"><rect/g) ?? []).length, 2, `${seed}: no eyelids`);
@@ -118,15 +119,25 @@ test('some sprites come out corrupted, most do not', () => {
   assert.ok(corrupted > MANY.length * 0.1 && corrupted < MANY.length * 0.3, `${corrupted}/${MANY.length} corrupted`);
 });
 
-test('every character gets a ledger entry: enlisted first, an ending last', () => {
+test('every character gets a ledger entry: how they came to us first, how it ends last', () => {
+  const opening: Record<string, string> = { taken: 'Taken', forvalaka: 'First sighted' };
   for (const seed of MANY) {
     const p = spriteParams(seed);
     const story = spriteStory(p);
     assert.deepEqual(story, spriteStory(spriteParams(seed)), `${seed}: story not stable`);
     assert.ok(story.length >= 4 && story.length <= 6, `${seed}: ${story.length} lines`);
-    assert.equal(story[0].label, 'Enlisted');
-    assert.equal(story.at(-1)!.label, p.corrupted ? 'Remarks' : story.at(-1)!.label === 'Fate' ? 'Fate' : 'Status');
+    assert.equal(story[0].label, opening[p.archetype] ?? 'Enlisted');
+    const ending = p.archetype === 'forvalaka' ? ['Last seen'] : p.corrupted ? ['Remarks'] : ['Fate', 'Status'];
+    assert.ok(ending.includes(story.at(-1)!.label), `${seed}: ends with ${story.at(-1)!.label}`);
   }
+});
+
+test('the Taken are always corrupted and masked; the forvalaka is rare', () => {
+  const lots = Array.from({ length: 3000 }, (_, i) => spriteParams(`rare-${i}`));
+  const taken = lots.filter((p) => p.archetype === 'taken');
+  const beasts = lots.filter((p) => p.archetype === 'forvalaka');
+  assert.ok(taken.length > 0 && taken.every((p) => p.corrupted && p.parts.headgear === 'mask'));
+  assert.ok(beasts.length > 0 && beasts.length < lots.length * 0.03, `${beasts.length} forvalaka in ${lots.length}`);
 });
 
 test('ledgers say "they" and keep clear of the books', () => {

@@ -342,8 +342,84 @@ const CORRUPTED = [
   'Their tent is always cold. In summer, frost forms on the inside.',
 ];
 
+// The Taken are not company members, but the company keeps a file on each of them.
+const TAKEN_AT = [
+  'Taken at the fall of a city that no longer appears on maps.',
+  'Taken in the year the rivers ran backwards.',
+  'Taken late, and unwillingly, which makes them more dangerous, not less.',
+  'Taken so long ago they no longer remember what came before.',
+  'Taken on a battlefield, mid-swing. Finished the swing on the other side.',
+];
+const TAKEN_MASK = [
+  'Iron, spiked, and warm to the touch.',
+  'Said to be their own face, cast in iron the day they were Taken.',
+  'Never removed. A sergeant who once tried is now a story we tell recruits.',
+  'Changes expression when nobody is looking. Everyone has looked away at least once.',
+];
+const TAKEN_BEFORE = [
+  'Was a healer, once. Some habits remain, which is worse.',
+  'Was a minor lord with a quarrel. Won the quarrel. Lost everything else.',
+  'Was, by every account, kind. Accounts differ about when that stopped.',
+  'Was a sorcerer of no great talent until the day they were Taken. The talent arrived with the mask.',
+];
+const TAKEN_POWERS = [
+  'Can speak into a dreamer’s ear from three valleys away.',
+  'Rides storms the way others ride horses.',
+  'Their shadow fights alongside them, and does not take orders.',
+  'Can unmake a bridge, a wall or a name.',
+  'Turns fear into weather.',
+];
+const TAKEN_REMARKS = [
+  'The company has orders to serve alongside them. The company has opinions.',
+  'Avoid eye contact. Avoid the eyeholes generally.',
+  'Once laughed. The horses have not been right since.',
+];
+
+// The forvalaka gets a bestiary entry instead.
+const SIGHTED = [
+  'Among the reeds at a river crossing, by a sentry who has not slept well since.',
+  'In a village that afterwards was not a village.',
+  'On a rooftop at midsummer, sitting like a cat, watching like something else.',
+  'By the light of a cookfire. Too close to the cookfire.',
+];
+const VICTIMS = [
+  'Eleven, by this ledger. More, by the rumours.',
+  'Two sentries and a goat. The goat is mourned most.',
+  'Uncounted. Nothing was left to count.',
+  'One officer, which some of the company do not hold against it.',
+];
+const WEAKNESS = [
+  'Silver, according to a drunk. Fire, according to a priest. Running, according to everyone else.',
+  'None known. A wizard is working on it, carefully, from a distance.',
+  'Its human shape sleeps like the dead. Finding the human is the trick.',
+  'Said to be unable to cross running water. Has been seen crossing running water.',
+];
+const LAST_SEEN = [
+  'Heading north, which is where we are going.',
+  'Watching the camp from the tree line, two nights ago.',
+  'In the reflection of a recruit who swears it was not there before.',
+  'Wearing the face of someone in this company. We are not saying who.',
+];
+
 export function spriteStory(params: SpriteParams): LedgerLine[] {
   const { rand, pick } = dice(`${params.seed}:story`);
+  if (params.archetype === 'taken') {
+    return [
+      { label: 'Taken', text: pick(TAKEN_AT) },
+      { label: 'Mask', text: pick(TAKEN_MASK) },
+      { label: 'Before', text: pick(TAKEN_BEFORE) },
+      { label: 'Powers', text: pick(TAKEN_POWERS) },
+      { label: 'Remarks', text: pick(rand() < 0.5 ? TAKEN_REMARKS : CORRUPTED) },
+    ];
+  }
+  if (params.archetype === 'forvalaka') {
+    return [
+      { label: 'First sighted', text: pick(SIGHTED) },
+      { label: 'Victims', text: pick(VICTIMS) },
+      { label: 'Weakness', text: pick(WEAKNESS) },
+      { label: 'Last seen', text: pick(LAST_SEEN) },
+    ];
+  }
   const lines: LedgerLine[] = [
     { label: 'Enlisted', text: pick(ENLISTED).replace('{o}', pick(ORIGINS)) + pick(WHEN) },
   ];

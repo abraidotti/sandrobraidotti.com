@@ -6,7 +6,7 @@
 
 import { dice } from './seed.ts';
 import { DEEP, DRAW_ORDER, EYE, GLOW, LEGEND, OUTLINE, SIZE, SMEAR, partById, partLayer, type ActionFrame } from './spriteParts.ts';
-import { mix, type SpriteParams } from './spriteParams.ts';
+import { kindOf, mix, type SpriteParams } from './spriteParams.ts';
 
 /** A frame: SIZE rows of SIZE colours, null where transparent. */
 export type Frame = (string | null)[][];
@@ -140,7 +140,7 @@ function rects(frame: Frame): string {
 }
 
 export function renderSprite(params: SpriteParams): string {
-  const label = escapeXml(`${params.name}, a ${params.corrupted ? 'corrupted ' : ''}${params.archetype}`);
+  const label = escapeXml(`${params.name}, ${kindOf(params)}`);
   const frames = frameSet(params)
     .map(({ frame, lids, flares }, i) =>
       `<g class="frame-${'ab'[i]}">${rects(frame)}<g class="lids">${rects(lids)}</g><g class="flares">${rects(flares)}</g></g>`,

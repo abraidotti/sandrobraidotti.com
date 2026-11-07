@@ -42,6 +42,17 @@ const BODY = ['foot', 'finger', 'hand', 'bone', 'tooth', 'jaw', 'knee', 'back', 
 const COUNT = ['Two', 'Three', 'Half', 'No', 'Nine'];
 const COUNTED = ['Toes', 'Fingers', 'Teeth', 'Ears', 'Thumbs', 'Knuckles'];
 
+/** The Taken go by grander titles than the merely corrupted. */
+const TAKEN_TITLES = [
+  'the Veiled', 'the Unbowed', 'Hushwalker', 'Ashcrown', 'the Weeping Lantern', 'the Thousand Doors', 'Gravesong',
+  'the Pale Hand', 'Dusksworn', 'the Quiet Flood', 'the Stitched King', 'Thornqueen', 'the Hollow Bell',
+];
+/** What frightened people call a forvalaka. */
+const BEAST_NAMES = [
+  'the Spotted Hunger', 'the Thing in the Reeds', 'Velvet Paws', 'the Night Cat', 'Old Rosette', 'the Grinning Dark',
+  'Soft-Foot', 'the Kitchen Ghost', 'Whiskers-in-the-Well', 'the Long Purr',
+];
+
 const TITLES = ['the Hollow', 'the Unquiet', 'the Pale', 'the Weeping', 'the Drowned', 'the Hungry', 'the Lantern-Eyed', 'the Mourner'];
 const DREAD = ['Ash', 'Thorn', 'Grave', 'Rot', 'Moth', 'Hollow', 'Cinder', 'Gall'];
 const DOER = ['weeper', 'binder', 'mouth', 'singer', 'walker', 'wright'];
@@ -67,18 +78,24 @@ const blocked = (name: string) => {
 export function generatedName(seed: string, archetype: string, parts: Partial<Record<Slot, string>>, corrupted: boolean): string {
   const { pick, weighted } = dice(`${seed}:name:${archetype}`);
   const partWords = Object.values(parts).flatMap((id) => PART_WORDS[id] ?? []);
+  const roll = (): string => {
+    if (archetype === 'forvalaka') return pick(BEAST_NAMES);
+    if (archetype === 'taken') return pick(TAKEN_TITLES);
+    if (corrupted) {
+      return weighted<() => string>([
+        [() => pick(TITLES), 1],
+        [() => pick(DREAD) + pick(DOER), 2],
+      ])();
+    }
+    return weighted<() => string>([
+      [() => pick(partWords.length ? partWords : SINGLE), 3],
+      [() => pick(SINGLE), 3],
+      [() => pick(TRAIT) + pick(BODY), 3],
+      [() => `${pick(COUNT)}-${pick(COUNTED)}`, 2],
+    ])();
+  };
   for (let attempt = 0; attempt < 8; attempt++) {
-    const name = corrupted
-      ? weighted<() => string>([
-          [() => pick(TITLES), 1],
-          [() => pick(DREAD) + pick(DOER), 2],
-        ])()
-      : weighted<() => string>([
-          [() => pick(partWords.length ? partWords : SINGLE), 3],
-          [() => pick(SINGLE), 3],
-          [() => pick(TRAIT) + pick(BODY), 3],
-          [() => `${pick(COUNT)}-${pick(COUNTED)}`, 2],
-        ])();
+    const name = roll();
     if (!blocked(name)) return name;
   }
   return pick(SINGLE);

@@ -193,6 +193,48 @@ const lanternRaised = (dx = 0): Run[] =>
     [11, 27, '~'], [13, 28, '~'], [15, 28, '~'], [17, 27, '~'], [18, 24, '~'], [10, 25, '~'],
   ].map(([y, x, px]) => [y, (x as number) + dx, px] as Run);
 
+/** An open hand with sorcery drifting round it in motes. */
+const sorceryIdle: Run[] = [...fist, [14, 7, 'v'], [16, 5, 'v'], [19, 6, 'v'], [21, 8, 'v']];
+/** The hand thrust forward at chest height, the sleeve following, the resting sleeve erased. */
+const sorceryHand: Run[] = [
+  [16, 9, '___'], [17, 9, '___'], [18, 9, '___'], [19, 10, '__'],
+  [14, 8, 'gh'], [15, 8, 'ghhh'],
+  [13, 6, 'ab'], [14, 6, 'bc'],
+];
+
+// The forvalaka, a wereleopard prowling forward: fur from the hair ramp, spots in deep shadow,
+// glowing eyes, bone-pale teeth and claws.
+const beastHead: Run[] = [
+  [12, 6, 'e'], [12, 9, 'e'],
+  [13, 5, 'ddeeef'],
+  [14, 4, 'deeewef'],
+  [15, 3, 'devdeeef'],
+  [16, 2, 'weeeeeeff'],
+  [17, 2, 'ffeeeweff'],
+  [18, 3, 'fxwfeef'],
+  [19, 4, 'ffeef'],
+];
+const beastBody: Run[] = [
+  [14, 11, 'ddddd'],
+  [15, 11, 'deeeedddddd'],
+  [16, 11, 'eeweeeeweeeedd'],
+  [17, 11, 'eeeeeweeeeweeee'],
+  [18, 11, 'eweeeeeeweeeeef'],
+  [19, 9, 'eeeeeweeeeeeweeff'],
+  [20, 9, 'feeeeeeeweeeeeff'],
+  [21, 9, 'fffeeeeeeeeeffff'],
+];
+const beastLegs: Run[] = [
+  [22, 9, 'fff'], [23, 9, 'eef'], [24, 9, 'eef'], [25, 8, 'eef'], [26, 8, 'eef'], [27, 8, 'eef'], [28, 7, 'deef'], [29, 7, 'xxx'],
+  [22, 12, 'ff'], [23, 12, 'ff'], [24, 12, 'ff'], [25, 12, 'ff'], [26, 12, 'ff'], [27, 12, 'ff'], [28, 12, 'eff'], [29, 12, 'xx'],
+  [22, 18, 'eeeee'], [23, 19, 'eeef'], [24, 20, 'eef'], [25, 21, 'ef'], [26, 21, 'ef'], [27, 20, 'eef'], [28, 19, 'deef'], [29, 19, 'xxx'],
+  [23, 23, 'ff'], [24, 23, 'ff'], [25, 24, 'ff'], [26, 24, 'ff'], [27, 24, 'ff'], [28, 24, 'eff'], [29, 24, 'xx'],
+];
+const beastTail: Run[] = [
+  [18, 26, 'ee'], [17, 27, 'ef'], [16, 27, 'ef'], [15, 28, 'ew'], [14, 28, 'ef'], [13, 28, 'ef'], [12, 27, 'ee'], [11, 26, 'ew'], [10, 25, 'e'],
+];
+const moved = (runs: Run[], dx: number, dy: number): Run[] => runs.map(([y, x, px]) => [y + dy, x + dx, px]);
+
 /** A quiver of bolts at the hip, fletchings showing. */
 const quiver: Run[] = [[17, 21, 'x'], [18, 20, 'xy'], [19, 20, 'nn'], [20, 20, 'mn'], [21, 20, 'mn'], [22, 20, 'mo'], [23, 20, 'oo']];
 
@@ -392,6 +434,28 @@ export const PARTS: Part[] = [
         [11, 11, 'pwqwpwqwrr'],
         [12, 12, 'qwqpqwrr'],
         [13, 13, 'rrprr'],
+      ],
+    },
+  },
+
+  {
+    id: 'mask',
+    slot: 'headgear',
+    // The Taken's mask: iron, crowned with spikes, eyeholes (the eyes glow through) and a mouth slit.
+    layers: {
+      main: [
+        [2, 13, 'p.p.q'],
+        [3, 13, 'q.q.r'],
+        [4, 13, 'qrqrr'],
+        [5, 13, 'pqpqr'],
+        [6, 12, 'ppqqqqr'],
+        [7, 12, 'pqqqqqrr'],
+        [8, 12, 'p*qq*qrr'],
+        [9, 11, 'ppqqqqqr'],
+        [10, 12, 'pqwwwqr'],
+        [11, 12, 'pqqqqr'],
+        [12, 13, 'qqqr'],
+        [13, 14, 'qr'],
       ],
     },
   },
@@ -834,6 +898,84 @@ export const PARTS: Part[] = [
         },
         // Recover: back to rest, the lantern still swinging a pixel out.
         { ms: 240, lean: 1, runs: [...daggerLow, ...shifted(lanternLow, 1)] },
+      ],
+    },
+  },
+  {
+    id: 'sorcery',
+    slot: 'weapon',
+    layers: { main: sorceryIdle },
+    action: {
+      verb: 'unleash',
+      frames: [
+        // Gather: the hand thrust forward, a ring of power tightening round it.
+        {
+          ms: 260,
+          runs: [
+            ...sorceryHand,
+            [10, 6, 'v~v'], [11, 4, '~'], [11, 10, '~'], [12, 3, 'v'], [13, 3, '~'], [14, 3, '~'], [15, 4, '~'], [15, 10, '~'], [16, 5, 'v~v'],
+          ],
+        },
+        // Unleash: a jagged bolt tears out of the palm.
+        {
+          ms: 120,
+          lean: 1,
+          runs: [...sorceryHand, [12, 1, '~'], [13, 1, 'v~v~v'], [14, 2, '~v~v'], [15, 1, '~'], [11, 3, 'v'], [16, 3, 'v']],
+        },
+        // Crackle: what is left of it spits and fades.
+        {
+          ms: 200,
+          lean: 1,
+          runs: [...sorceryHand, [10, 2, 'v'], [12, 4, '~'], [16, 2, 'v'], [17, 5, '~'], [11, 1, '~'], [15, 3, 'v'], [13, 2, '~']],
+        },
+        { ms: 240, runs: sorceryIdle },
+      ],
+    },
+  },
+  {
+    id: 'forvalaka',
+    slot: 'weapon',
+    layers: { main: [...beastTail, ...beastBody, ...beastLegs, ...beastHead] },
+    action: {
+      verb: 'pounce',
+      frames: [
+        // Crouch: belly to the ground, haunches bunched, tail lashing low.
+        {
+          ms: 260,
+          runs: [
+            ...moved(beastTail, 1, 3), ...moved(beastBody, 0, 3), ...moved(beastHead, 0, 3),
+            [25, 8, 'eef'], [26, 8, 'eef'], [27, 7, 'deef'], [28, 7, 'deef'], [29, 7, 'xxx'],
+            [25, 12, 'ff'], [26, 12, 'ff'], [27, 12, 'ff'], [28, 12, 'eff'], [29, 12, 'xx'],
+            [25, 18, 'eeeeee'], [26, 19, 'eeeeef'], [27, 20, 'eeef'], [28, 19, 'deeef'], [29, 19, 'xxxx'],
+            [27, 24, 'ff'], [28, 24, 'eff'], [29, 24, 'xx'],
+          ],
+        },
+        // Leap: launched forward, forelegs reaching, hind legs and tail streaming out behind.
+        {
+          ms: 130,
+          runs: [
+            [14, 25, 'eef'], [13, 27, 'eff'], [12, 29, 'e'],
+            ...moved(beastBody, -1, -4), ...moved(beastHead, -1, -4),
+            [18, 6, 'eeff'], [19, 4, 'eef'], [20, 2, 'deef'], [21, 1, 'xx'],
+            [19, 8, 'ff'], [20, 6, 'ff'], [21, 4, 'eff'], [22, 3, 'xx'],
+            [18, 18, 'eeeee'], [19, 21, 'eeef'], [20, 24, 'eef'], [21, 26, 'ef'], [22, 28, 'xx'],
+            [22, 14, '~~~~'], [24, 17, '~~~~~'], [26, 13, '~~~'],
+          ],
+        },
+        // Rake: claws flashing through three bright arcs.
+        {
+          ms: 180,
+          runs: [
+            ...moved(beastTail, 0, -1), ...moved(beastBody, -1, -1), ...moved(beastHead, -1, -1),
+            [21, 6, 'eef'], [20, 4, 'eef'], [19, 3, 'xx'],
+            ...moved(beastLegs.filter(([y, x]) => x > 11 || y < 22), -1, -1).filter(([y]) => y <= 29),
+            [14, 4, '~'], [15, 3, '~'], [16, 2, '~'], [17, 1, '~'],
+            [16, 5, '~'], [17, 4, '~'], [18, 3, '~'], [19, 2, '~'],
+            [18, 6, '~'], [19, 5, '~'], [20, 4, '~'], [21, 3, '~'],
+          ],
+        },
+        // Land: back on all fours, dust settling.
+        { ms: 260, runs: [...beastTail, ...beastBody, ...beastLegs, ...beastHead, [29, 4, '~~'], [28, 3, '~'], [29, 17, '~~']] },
       ],
     },
   },
