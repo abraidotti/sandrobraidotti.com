@@ -86,6 +86,22 @@ const fist: Run[] = [
   [18, 8, 'bc'],
 ];
 
+/** A staff with the orb on top, gripped at `handY` (and the row below). */
+function staff(handY: number): Run[] {
+  const shaft: Run[] = [];
+  for (let y = 4; y <= 29; y++) {
+    if (y === handY || y === handY + 1) continue;
+    shaft.push([y, 8, y < handY ? 'st' : 'tu']);
+  }
+  return [[1, 8, 'vv'], [2, 7, 'svvu'], [3, 7, 'sttu'], ...shaft, [handY, 8, 'ab'], [handY + 1, 8, 'bc']];
+}
+
+/** The front arm raised to the shoulder: the resting sleeve erased, a lifted sleeve drawn in. */
+const raisedSleeve: Run[] = [
+  [16, 9, '___'], [17, 9, '___'], [18, 9, '___'], [19, 10, '__'],
+  [12, 10, 'g'], [13, 10, 'ghh'], [14, 10, 'ghhh'],
+];
+
 // Faces share a head (rows 4-9) and differ by build in the jaw (rows 10-13). The feminine and
 // androgynous heads have a softer profile (no protruding nose); the feminine one adds a lash at the
 // near eye's outer corner.
@@ -449,15 +465,45 @@ export const PARTS: Part[] = [
   {
     id: 'staff',
     slot: 'weapon',
-    layers: {
-      main: [
-        [1, 8, 'vv'],
-        [2, 7, 'svvu'],
-        [3, 7, 'sttu'],
-        [4, 8, 'st'],
-        ...[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((y): Run => [y, 8, 'st']),
-        ...fist,
-        ...[19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29].map((y): Run => [y, 8, 'tu']),
+    layers: { main: staff(17) },
+    action: {
+      verb: 'cast',
+      frames: [
+        // Gather: the hand slides up the staff, the sleeve lifting with it; a halo forms round the orb.
+        {
+          ms: 220,
+          runs: [
+            ...raisedSleeve,
+            ...staff(11),
+            [1, 6, '~'], [1, 11, '~'], [3, 5, '~'], [3, 12, '~'], [4, 7, '~'], [4, 10, '~'],
+          ],
+        },
+        // Flare: the orb bursts into a star with a white-hot core.
+        {
+          ms: 160,
+          runs: [
+            ...raisedSleeve,
+            ...staff(11),
+            [1, 8, '~~'],
+            [1, 5, 'v'], [1, 7, '~'], [1, 10, '~'], [1, 12, 'v'],
+            [2, 6, '~'], [2, 11, '~'],
+            [3, 4, 'v~'], [3, 12, '~v'],
+            [4, 6, '~'], [4, 11, '~'],
+            [5, 5, 'v'], [5, 12, 'v'],
+          ],
+        },
+        // Release: leaning in, sparks fly forward from the orb.
+        {
+          ms: 180,
+          lean: 1,
+          runs: [
+            ...raisedSleeve,
+            ...staff(11),
+            [3, 3, 'v'], [4, 2, '~v'], [5, 3, 'v~'], [6, 2, 'v'], [7, 4, 'v'], [2, 5, '~'],
+          ],
+        },
+        // Settle: back at rest, a couple of embers still drifting.
+        { ms: 240, runs: [...staff(17), [5, 2, 'v'], [9, 3, 'v']] },
       ],
     },
   },
