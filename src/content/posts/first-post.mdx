@@ -1,0 +1,34 @@
+---
+title: "First post"
+date: 2026-10-21
+description: "Reactivating my site"
+tags: ["music", "life"]
+---
+
+import CommitSong from '../../components/CommitSong.astro';
+
+So I've vibe coded a website renovation. My plan is to write blog posts manually
+but vibe code everything else.
+
+I have come to like pulling in environmental metadata to seed randomized variables
+for effect, starting with a platform feature on this blog: commit hash-informed tune
+generation.
+
+This post's own creation commit wrote the song below. Press play:
+
+<CommitSong hash={props.hash} size="full" />
+
+Here's roughly how a hash becomes a song:
+
+```ts
+const rand = sfc32(...cyrb128(hash));   // seeded, so same hash = same song
+const key = int(0, 11);
+const modeName = weighted(MODE_WEIGHTS);
+const tempo = int(76, 112);
+const timbre = pick(['velvet', 'glass', 'hollow', 'choir']);
+const unease = rand() < 0.6 ? 0 : 0.25 + rand() * 0.55;  // most songs are pure dream
+```
+
+I continue to vibe-iterate on the tune generation algorithm.
+
+I have a couple of other projects lined up. I'll start them soon.
