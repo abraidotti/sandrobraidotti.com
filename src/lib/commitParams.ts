@@ -275,7 +275,7 @@ export function commitParams(hash: string): SongParams {
     const at = { step: i * STEPS_PER_CHORD, length: STEPS_PER_CHORD };
     // Uneasy songs may twist one chord in the second half, once the loop has been heard,
     // but never the home chord or a borrowed one. Chromatic root, out-of-key colour, a little out of tune.
-    if (i >= 4 && !substituted && typeof s.step === 'number' && s.step !== 0 && rand() < unease * 0.4) {
+    if (i >= 4 && !substituted && typeof s.step === 'number' && s.step !== 0 && rand() < unease * 0.55) {
       substituted = true;
       const [quality, ivs] = pick(STRANGE);
       const rootPc = mod12(prev.bass + pick([1, 3, 4, 6, 8, 9]));
@@ -388,7 +388,9 @@ export function commitParams(hash: string): SongParams {
       if (!arpBars.includes(Math.floor(chord.step / BAR))) return;
       for (let s = 0; s < chord.length; s++) {
         const pitch = chord.notes[arpIndex(s, chord.notes.length)] + 12;
-        events.push({ chord: c, family: chord.family, color: chord.color, step: chord.step + s, length: 2, pitch, delay: 0, velocity: 0.55 });
+        // Stop at the chord's end, so nothing rings into a late entry's gap.
+        const length = Math.min(2, chord.length - s);
+        events.push({ chord: c, family: chord.family, color: chord.color, step: chord.step + s, length, pitch, delay: 0, velocity: 0.55 });
       }
     });
   }

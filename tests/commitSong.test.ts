@@ -112,5 +112,5 @@ const SNAPSHOT = {
   tempo: 89,
   timbre: 'velvet',
   perform: 'strum',
-  chords: 'Dm7 → Fmaj9 → Gm7 → Am7 → D7sus2 → Fmaj9 → Gm9 → B♭maj7',
+  chords: 'Dm9 → C7 → B♭maj9 → A7 → Dm9 → C7 → B♭maj9 → A7',
 };
