@@ -115,6 +115,34 @@ function raisedSleeve(handY: number, topX: number, footX: number): Run[] {
   ];
 }
 
+/** An upright spear, gripped at `handY`: leaf-shaped head, a rag tied below it, tilting like the staff. */
+function spearUp(handY: number, topX = 8, footX = 8): Run[] {
+  const t = topX;
+  const shaft: Run[] = [];
+  for (let y = 7; y <= 29; y++) {
+    if (y === handY || y === handY + 1) continue;
+    shaft.push([y, staffX(y, topX, footX), y < handY ? 'st' : 'tu']);
+  }
+  return [
+    [1, t, 'p'], [2, t, 'pq'], [3, t - 1, 'ppq'], [4, t - 1, 'pqr'], [5, t, 'qr'], [6, t, 'rr'],
+    ...shaft,
+    [7, t + 2, 'jk'], [8, t + 2, 'kl'], [9, t + 3, 'l'],
+    [handY, staffX(handY, topX, footX), 'ab'], [handY + 1, staffX(handY + 1, topX, footX), 'bc'],
+  ];
+}
+
+/** A levelled spear pointing forward: tip at `tipX`, shaft two rows deep (`y`, `y`+1) back to `endX`, rag streaming. */
+function spearLevel(tipX: number, y: number, endX: number, handX: number): Run[] {
+  const shaftFrom = tipX + 6;
+  return [
+    [y - 1, tipX + 2, 'pq'], [y, tipX, 'ppqqr'], [y + 1, tipX, 'qqrrr'], [y + 2, tipX + 2, 'rr'],
+    [y, tipX + 5, 'r'], [y + 1, tipX + 5, 'r'],
+    [y, shaftFrom, 's'.repeat(endX - shaftFrom + 1)], [y + 1, shaftFrom, 't'.repeat(endX - shaftFrom + 1)],
+    [y - 1, tipX + 7, 'jkk'], [y - 2, tipX + 9, 'kl'],
+    [y, handX, 'ab'], [y + 1, handX, 'bc'],
+  ];
+}
+
 /** Shift runs sideways, so glow effects follow a tilted staff's orb. */
 const shifted = (runs: Run[], dx: number): Run[] => runs.map(([y, x, px]) => [y, x + dx, px]);
 
@@ -475,6 +503,56 @@ export const PARTS: Part[] = [
             [21, 7, 'pr'], [22, 7, 'pr'], [23, 7, 'pr'], [24, 6, 'ppr'], [25, 6, 'ppq'], [26, 6, 'pq'], [27, 7, 'q'],
           ],
         },
+      ],
+    },
+  },
+  {
+    id: 'spear',
+    slot: 'weapon',
+    layers: { main: spearUp(17) },
+    action: {
+      verb: 'thrust',
+      frames: [
+        // Coil: the spear swings level and draws right back, butt past the shoulders; the body rocks back.
+        {
+          ms: 220,
+          lean: -1,
+          runs: [
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            ...spearLevel(8, 17, 29, 14),
+            [16, 12, 'ghh'],
+          ],
+        },
+        // Thrust: a two-pixel lunge, the spear at full stretch, speed lines streaming off the head, dust at the front foot.
+        {
+          ms: 110,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            ...spearLevel(1, 17, 22, 8),
+            [16, 9, 'gh'],
+            [13, 5, '~~~~'], [14, 7, '~~~'], [21, 6, '~~~~'], [22, 4, '~~~'],
+            [16, 1, '~'], [19, 1, '~'],
+            [28, 8, '~'], [29, 6, '~~'],
+          ],
+        },
+        // Impact: held at full extension; a starburst at the tip throws off sparks.
+        {
+          ms: 200,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            ...spearLevel(2, 17, 23, 9),
+            [16, 10, 'gh'],
+            [11, 4, '~'], [12, 3, '~'], [13, 2, '~'], [14, 1, '~~'], [15, 1, '~'], [16, 1, '~'],
+            [19, 1, '~'], [20, 1, '~'], [21, 1, '~~'], [22, 2, '~'], [23, 3, '~'], [24, 4, '~'],
+            [17, 1, '~'], [18, 1, '~'],
+            [10, 6, 'v'], [12, 7, 'v'], [23, 7, 'v'], [25, 6, 'v'], [15, 4, 'v'], [20, 4, 'v'],
+            [29, 7, '~'],
+          ],
+        },
+        // Recover: the spear swings back up at a tilt as the weight comes off the front foot.
+        { ms: 240, lean: 1, runs: spearUp(17, 5, 10) },
       ],
     },
   },

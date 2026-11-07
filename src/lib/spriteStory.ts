@@ -192,6 +192,7 @@ const ITEMS = [
 /** Items that come from what the sprite is actually wearing or holding. */
 const PART_ITEMS: Record<string, string[]> = {
   falchion: ['a falchion with a notch in the edge they refuse to grind out'],
+  spear: ['a spear with a rag tied below the head, for luck or for blood, depending on the day'],
   staff: ['a staff of blackthorn that stays warm on cold nights'],
   hood: ['a hood they have not been seen without'],
   'kettle hat': ['a kettle hat with someone else’s name scratched inside it'],

@@ -7,6 +7,7 @@ import type { Slot } from './spriteParts.ts';
 /** Nicknames a part can lend, so the name fits the look. */
 const PART_WORDS: Record<string, string[]> = {
   falchion: ['Notch', 'Hack', 'Cleaver', 'Chopper'],
+  spear: ['Skewer', 'Reach', 'Long', 'Prod'],
   staff: ['Wick', 'Hex', 'Murmur', 'Cant'],
   hood: ['Cowl', 'Hush', 'Shade'],
   'kettle hat': ['Pot', 'Tin', 'Bucket'],

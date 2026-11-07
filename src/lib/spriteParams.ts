@@ -26,7 +26,7 @@ export const ARCHETYPES: Archetype[] = [
       torso: ['gambeson'],
       legs: ['trousers'],
       cloak: [null, 'ragged cloak'],
-      weapon: ['falchion'],
+      weapon: ['falchion', 'spear'],
     },
   },
   {
