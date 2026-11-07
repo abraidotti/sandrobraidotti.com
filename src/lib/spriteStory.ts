@@ -110,6 +110,36 @@ const MARKS = [
   'A ring of old rope burn around the neck. Nobody has asked twice.',
 ];
 
+/** When the sprite wears a mark, the ledger describes that mark. */
+const MARK_LINES: Record<string, string[]> = {
+  eyepatch: [
+    'An eyepatch. Claims there is a perfectly good eye under it, saving itself for something worth seeing.',
+    'An eyepatch, and a different story every time about what took the eye. The current favourite involves a goose.',
+    'An eyepatch, worn on alternate sides depending on the weather. Nobody has checked.',
+    'An eyepatch embroidered with an open eye, which the recruits find unsettling, which is the point.',
+    'An eyepatch over an eye lost to a splinter at a siege. They kept the splinter. And the eye.',
+  ],
+  scar: [
+    'A pale scar from brow to cheek. They insist it was a duel. The duel was with a gate.',
+    'A scar down the face that pulls when they smile, which has made smiling rarer and more alarming.',
+    'A scar they got protecting a cook. The company has never eaten better, or felt safer.',
+    'A long scar, neatly stitched. They did the stitching themselves, without a mirror, mid-battle.',
+    'A scar that whitens when they lie. They have learned to lie facing away.',
+  ],
+  stubble: [
+    'Permanent stubble. Has never been seen clean-shaven, or growing a beard, which troubles the sergeant.',
+    'Stubble, maintained at exactly three days by a method they will not share.',
+    'Stubble that grows back by noon. Shaves with a knife at dawn as a point of principle.',
+    'Stubble rough enough to strike a match on. They have done so, for wagers.',
+  ],
+  'war paint': [
+    'Paints stripes under their eyes before a fight, in the old way of a people nobody else remembers.',
+    'War paint, renewed every dawn whether or not there is a war. There usually is.',
+    'Paint under the eyes, mixed from soot and something red they will not name.',
+    'War paint, which they say keeps the dead from recognising them. It has not been disproved.',
+  ],
+};
+
 const HABITS = [
   'Sharpens everything. Has been asked to stop sharpening the spoons.',
   'Sings while digging latrines, which has made latrine duty strangely popular.',
@@ -326,7 +356,7 @@ export function spriteStory(params: SpriteParams): LedgerLine[] {
     { label: 'Reason given', text: pick(REASONS) },
     { label: 'Next of kin', text: pick(KIN) },
     { label: 'Carries', text: (partItems.length && rand() < 0.6 ? pick(partItems) : pick(ITEMS)).replace(/^./, (c) => c.toUpperCase()) + '.' },
-    { label: 'Marks', text: pick(MARKS) },
+    { label: 'Marks', text: pick(params.parts.mark ? MARK_LINES[params.parts.mark] ?? MARKS : MARKS) },
     { label: 'Habits', text: pick(HABITS) },
     { label: 'Owes', text: pick(DEBTS) },
     { label: 'Wounds', text: pick(WOUNDS) },
@@ -334,6 +364,8 @@ export function spriteStory(params: SpriteParams): LedgerLine[] {
     { label: 'Disciplinary', text: pick(DISCIPLINE) },
   ];
   const keep = new Set<number>();
+  // A visible mark always makes the record.
+  if (params.parts.mark) keep.add(middle.findIndex((line) => line.label === 'Marks'));
   const count = 2 + Math.floor(rand() * 3);
   while (keep.size < count) keep.add(Math.floor(rand() * middle.length));
   lines.push(...middle.filter((_, i) => keep.has(i)));

@@ -14,6 +14,8 @@ export interface Archetype {
 }
 
 const EXPRESSIONS = ['grim', 'scowling', 'weary', 'snarling', 'haunted', 'smirking'];
+/** About two in five carry a mark. */
+const MARKS = [null, null, null, null, null, null, 'scar', 'eyepatch', 'stubble', 'war paint'];
 
 export const ARCHETYPES: Archetype[] = [
   {
@@ -22,7 +24,8 @@ export const ARCHETYPES: Archetype[] = [
     parts: {
       face: ['gaunt', 'long-haired', 'bearded'],
       expression: EXPRESSIONS,
-      headgear: [null, 'kettle hat', 'kettle hat', 'hood'],
+      mark: MARKS,
+      headgear: [null, null, 'kettle hat', 'kettle hat', 'hood'],
       torso: ['gambeson'],
       legs: ['trousers'],
       cloak: [null, 'ragged cloak'],
@@ -35,7 +38,8 @@ export const ARCHETYPES: Archetype[] = [
     parts: {
       face: ['gaunt', 'long-haired', 'bearded'],
       expression: EXPRESSIONS,
-      headgear: ['broad hat', 'broad hat', 'hood', null],
+      mark: MARKS,
+      headgear: ['broad hat', 'broad hat', null, null, 'hood'],
       torso: ['leather jerkin'],
       legs: ['trousers'],
       cloak: [null, null, 'ragged cloak'],
@@ -48,6 +52,7 @@ export const ARCHETYPES: Archetype[] = [
     parts: {
       face: ['gaunt', 'long-haired', 'bearded'],
       expression: EXPRESSIONS,
+      mark: MARKS,
       headgear: ['great helm', 'great helm', 'kettle hat', null],
       torso: ['chainmail'],
       legs: ['greaves'],
@@ -61,7 +66,8 @@ export const ARCHETYPES: Archetype[] = [
     parts: {
       face: ['gaunt', 'long-haired', 'bearded'],
       expression: EXPRESSIONS,
-      headgear: ['broad hat', 'hood', null],
+      mark: MARKS,
+      headgear: ['broad hat', null, null, 'hood'],
       torso: ['oilskin coat'],
       legs: ['coat skirt'],
       cloak: [null, null, 'ragged cloak'],
@@ -74,7 +80,8 @@ export const ARCHETYPES: Archetype[] = [
     parts: {
       face: ['gaunt', 'long-haired', 'bearded'],
       expression: EXPRESSIONS,
-      headgear: ['hood', 'hood', null],
+      mark: MARKS,
+      headgear: ['hood', 'hood', null, null, 'broad hat'],
       torso: ['robe'],
       legs: ['robe skirt'],
       cloak: [null, 'ragged cloak'],
@@ -97,7 +104,7 @@ export interface SpriteParams {
   corrupted: boolean;
 }
 
-const SLOTS: Slot[] = ['face', 'expression', 'headgear', 'torso', 'legs', 'cloak', 'weapon'];
+const SLOTS: Slot[] = ['face', 'expression', 'mark', 'headgear', 'torso', 'legs', 'cloak', 'weapon'];
 
 /** Mix a hex colour toward another by `t` (0-1). */
 export function mix(a: string, b: string, t: number): string {

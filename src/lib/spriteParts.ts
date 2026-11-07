@@ -13,7 +13,7 @@
 
 export const SIZE = 32;
 
-export type Slot = 'cloak' | 'weapon' | 'legs' | 'torso' | 'face' | 'expression' | 'headgear';
+export type Slot = 'cloak' | 'weapon' | 'legs' | 'torso' | 'face' | 'expression' | 'mark' | 'headgear';
 /** 'back' sits behind the body; 'main' is the part itself. */
 export type Layer = 'back' | 'main';
 export type Run = [y: number, x: number, pixels: string];
@@ -55,6 +55,7 @@ export const DRAW_ORDER: [Slot, Layer][] = [
   ['torso', 'main'],
   ['face', 'main'],
   ['expression', 'main'],
+  ['mark', 'main'],
   ['headgear', 'main'],
   ['cloak', 'main'],
   ['weapon', 'main'],
@@ -285,6 +286,29 @@ export const PARTS: Part[] = [
     id: 'smirking',
     slot: 'expression',
     layers: { main: [[7, 13, '^^'], [7, 16, '^^'], [8, 13, '*'], [8, 16, '*c'], [11, 13, 'cww'], [10, 16, 'w']] },
+  },
+
+  // ---------- marks ----------
+  // Drawn over the expression and under headgear: what a hard life leaves on a face.
+  {
+    id: 'eyepatch',
+    slot: 'mark',
+    layers: { main: [[7, 13, 'ww'], [8, 12, 'www'], [9, 13, 'w'], [7, 15, 'w'], [6, 16, 'ww']] },
+  },
+  {
+    id: 'scar',
+    slot: 'mark',
+    layers: { main: [[7, 12, 'y'], [8, 12, 'y'], [9, 13, 'y'], [10, 13, 'y']] },
+  },
+  {
+    id: 'stubble',
+    slot: 'mark',
+    layers: { main: [[10, 13, 'f.f.f'], [11, 12, 'f'], [11, 17, 'f'], [12, 14, 'f.f']] },
+  },
+  {
+    id: 'war paint',
+    slot: 'mark',
+    layers: { main: [[9, 13, 'l'], [10, 13, 'l'], [9, 16, 'l'], [10, 16, 'l']] },
   },
 
   // ---------- headgear ----------
