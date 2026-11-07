@@ -13,7 +13,7 @@
 
 export const SIZE = 32;
 
-export type Slot = 'cloak' | 'weapon' | 'legs' | 'torso' | 'face' | 'expression' | 'mark' | 'headgear';
+export type Slot = 'cloak' | 'weapon' | 'offhand' | 'legs' | 'torso' | 'face' | 'expression' | 'mark' | 'headgear';
 /** 'back' sits behind the body; 'main' is the part itself. */
 export type Layer = 'back' | 'main';
 export type Run = [y: number, x: number, pixels: string];
@@ -53,6 +53,7 @@ export const DRAW_ORDER: [Slot, Layer][] = [
   ['weapon', 'back'],
   ['legs', 'main'],
   ['torso', 'main'],
+  ['offhand', 'main'],
   ['face', 'main'],
   ['expression', 'main'],
   ['mark', 'main'],
@@ -164,9 +165,28 @@ function crossbow({ dx = 0, dy = 0, cocked = true, bolt = false } = {}): Run[] {
   return runs.map(([y, x, px]) => [y + dy, x + dx, px]);
 }
 
-/** A warhammer held upright, the head (flat face forward, beak behind) `dy` rows lower than at rest. */
-function hammerUp(dy = 0): Run[] {
-  const head: Run[] = [[3, 5, 'pqqqqqr'], [4, 4, 'ppqqqqqrr'], [5, 5, 'rqqqqqr']];
+/** A bludgeon's head in its three poses: upright at rest, heaved up over the shoulder, and down on the ground in front. */
+interface BludgeonHead {
+  up: Run[];
+  raised: Run[];
+  down: Run[];
+}
+const HAMMER_HEAD: BludgeonHead = {
+  // flat face forward, beak behind
+  up: [[3, 5, 'pqqqqqr'], [4, 4, 'ppqqqqqrr'], [5, 5, 'rqqqqqr']],
+  raised: [[1, 21, 'pqqqr'], [2, 20, 'pqqqqrr'], [3, 21, 'rqqqr']],
+  down: [[25, 2, 'pqqqr'], [26, 2, 'pqqqr'], [27, 2, 'pqqqr'], [28, 3, 'rr'], [24, 3, 'r']],
+};
+const MACE_HEAD: BludgeonHead = {
+  // a flanged iron head, the flanges catching the light
+  up: [[2, 8, 'r'], [3, 6, 'rpqr'], [4, 5, 'rppqqr'], [5, 6, 'rqqr'], [6, 8, 'r']],
+  raised: [[1, 22, 'r'], [2, 20, 'rpqr'], [3, 19, 'rppqqr'], [4, 20, 'rqqr'], [5, 22, 'r']],
+  down: [[24, 3, 'r'], [25, 2, 'rpqr'], [26, 1, 'rppqqr'], [27, 2, 'rqqr'], [28, 3, 'r']],
+};
+
+/** A bludgeon held upright, its head `dy` rows lower than at rest. */
+function hammerUp(dy = 0, heads: BludgeonHead = HAMMER_HEAD): Run[] {
+  const head = heads.up;
   const haft: Run[] = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((y) => [y, 8, 'st']);
   return [
     ...[...head, ...haft].map(([y, x, px]): Run => [y + dy, x, px]).filter(([y]) => y < 17),
@@ -174,6 +194,80 @@ function hammerUp(dy = 0): Run[] {
     [19, 8, 'tu'], [20, 8, 'tu'], [21, 8, 'tu'], [22, 8, 'qr'],
   ];
 }
+
+/** Heave a bludgeon overhead, smash it into the ground, hold through the impact, drag it back up. */
+function bludgeon(id: string, heads: BludgeonHead): Part {
+  const downHaft: Run[] = [[20, 7, 'st'], [21, 7, 'st'], [22, 6, 'st'], [23, 6, 'st'], [24, 5, 'st']];
+  return {
+    id,
+    slot: 'weapon',
+    layers: { main: hammerUp(0, heads) },
+    action: {
+      verb: 'smash',
+      frames: [
+        // Raise: heaved up overhead, the head hanging back past the shoulders; the body rocks back.
+        {
+          ms: 260,
+          lean: -1,
+          runs: [
+            [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+            [12, 10, 'g'], [13, 10, 'ghh'], [14, 10, 'ghhh'],
+            [8, 13, 'st'], [7, 14, 'st'], [6, 16, 'st'], [5, 18, 'st'], [4, 20, 'st'],
+            ...heads.raised,
+            [9, 11, 'ab'], [10, 11, 'bc'],
+          ],
+        },
+        // Smash: brought down through a huge arc into the ground in front, the whole body behind it.
+        {
+          ms: 100,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [3, 9, '~~'], [4, 7, '~~'], [5, 5, '~~'], [6, 4, '~'], [7, 3, '~'],
+            ...[8, 9, 10, 11, 12].map((y): Run => [y, 2, '~']),
+            ...[13, 14, 15, 16, 17, 18, 19].map((y): Run => [y, 1, '~']),
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            ...downHaft, ...heads.down,
+            [18, 7, 'ab'], [19, 7, 'bc'],
+          ],
+        },
+        // Impact: held there as dust rolls out along the ground and sparks fly.
+        {
+          ms: 240,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            ...downHaft, ...heads.down,
+            [18, 7, 'ab'], [19, 7, 'bc'],
+            [29, 1, '~~~~~~~~~'], [28, 8, '~~'], [27, 10, '~'], [28, 1, '~'], [27, 1, '~'],
+            [22, 2, '~'], [23, 1, '~'], [21, 6, '~'], [20, 7, '~'],
+            [24, 9, 'v'], [22, 9, 'v'], [26, 10, 'v'], [21, 4, 'v'], [19, 2, 'v'],
+          ],
+        },
+        // Recover: dragged back up, the head still low and heavy.
+        { ms: 280, lean: 1, runs: hammerUp(4, heads) },
+      ],
+    },
+  };
+}
+
+/** A hand axe held upright, the bearded head forward. */
+const axeUp: Run[] = [
+  [6, 5, 'pq'], [7, 4, 'pqqr'], [8, 4, 'pqqr'], [9, 5, 'pq'], [7, 7, 'r'], [8, 7, 'r'],
+  ...[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((y): Run => [y, 8, 'st']),
+  ...fist,
+  [19, 8, 'tu'], [20, 8, 'u'],
+];
+
+/** A spade held upright, D-grip at the top, blade planted in front of the feet. */
+const spadeUp: Run[] = [
+  [8, 7, 'sss'], [9, 7, 's.s'], [10, 8, 's'],
+  ...[11, 12, 13, 14, 15, 16].map((y): Run => [y, 8, 'st']),
+  ...fist,
+  ...[19, 20, 21, 22, 23].map((y): Run => [y, 8, 'tu']),
+  [24, 6, 'rqqqr'], [25, 6, 'pqqqr'], [26, 6, 'pqqqr'], [27, 7, 'pqr'], [28, 8, 'r'],
+];
 
 /** A dagger held low in the front fist, point down. */
 const daggerLow: Run[] = [[16, 8, 'qr'], ...fist, [19, 7, 'rqr'], [20, 7, 'pq'], [21, 7, 'pq'], [22, 7, 'pr'], [23, 7, 'p']];
@@ -444,6 +538,51 @@ export const PARTS: Part[] = [
     id: 'smirking',
     slot: 'expression',
     layers: { main: [[7, 13, '^^'], [7, 16, '^^'], [8, 13, '*'], [8, 16, '*c'], [11, 13, 'cww'], [10, 16, 'w']] },
+  },
+
+  // ---------- off-hand ----------
+  // Carried in the back hand, drawn over the torso, so they combine with any weapon.
+  {
+    id: 'round shield',
+    slot: 'offhand',
+    // Painted planks, an iron rim and a boss.
+    layers: {
+      main: [
+        [15, 19, 'rqqr'],
+        [16, 18, 'rstttr'],
+        [17, 17, 'rsttkttr'],
+        [18, 17, 'qstkktuq'],
+        [19, 17, 'qskkpkuq'],
+        [20, 17, 'qstkktuq'],
+        [21, 17, 'rsttktur'],
+        [22, 18, 'rtttur'],
+        [23, 19, 'rqqr'],
+      ],
+    },
+  },
+  {
+    id: 'heater shield',
+    slot: 'offhand',
+    // A knight's shield, painted in trim, with a pale cross.
+    layers: {
+      main: [
+        [15, 18, 'rqqqqqr'],
+        [16, 18, 'qjjxkkq'],
+        [17, 18, 'qjxxxkq'],
+        [18, 18, 'qjkxkkq'],
+        [19, 18, 'qkkxklq'],
+        [20, 19, 'qkklq'],
+        [21, 19, 'qklq'],
+        [22, 20, 'qlq'],
+        [23, 21, 'r'],
+      ],
+    },
+  },
+  {
+    id: 'grimoire',
+    slot: 'offhand',
+    // A heavy book at the hip, a rune on its cover glowing.
+    layers: { main: [[19, 20, 'mnnn'], [20, 20, 'nxvo'], [21, 20, 'nvxo'], [22, 20, 'oooo']] },
   },
 
   // ---------- marks ----------
@@ -992,57 +1131,104 @@ export const PARTS: Part[] = [
       ],
     },
   },
+  bludgeon('warhammer', HAMMER_HEAD),
+  bludgeon('flanged mace', MACE_HEAD),
   {
-    id: 'warhammer',
+    id: 'hand axe',
     slot: 'weapon',
-    layers: { main: hammerUp() },
+    layers: { main: axeUp },
     action: {
-      verb: 'smash',
+      verb: 'chop',
       frames: [
-        // Raise: heaved up overhead, the head hanging back past the shoulders; the body rocks back.
+        // Wind-up: the axe raised high, the forearm lifted from the shoulder.
         {
-          ms: 260,
-          lean: -1,
+          ms: 180,
           runs: [
             [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
-            [12, 10, 'g'], [13, 10, 'ghh'], [14, 10, 'ghhh'],
-            [8, 13, 'st'], [7, 14, 'st'], [6, 16, 'st'], [5, 18, 'st'], [4, 20, 'st'],
-            [1, 21, 'pqqqr'], [2, 20, 'pqqqqrr'], [3, 21, 'rqqqr'],
-            [9, 11, 'ab'], [10, 11, 'bc'],
+            [3, 4, 'pq'], [4, 3, 'pqqr'], [5, 3, 'pqqr'], [6, 4, 'pq'],
+            ...[3, 4, 5, 6, 7, 8, 9, 10].map((y): Run => [y, 8, 'st']), [4, 7, 'r'], [5, 7, 'r'],
+            [11, 8, 'ab'], [12, 8, 'bc'],
+            [13, 9, 'gh'], [14, 9, 'ggh'],
           ],
         },
-        // Smash: brought down through a huge arc into the ground in front, the whole body behind it.
+        // Chop: swung down and forward through a pale arc, the body lunging behind it.
         {
-          ms: 100,
+          ms: 120,
           lean: 2,
           runs: [
             [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
-            [3, 9, '~~'], [4, 7, '~~'], [5, 5, '~~'], [6, 4, '~'], [7, 3, '~'],
-            ...[8, 9, 10, 11, 12].map((y): Run => [y, 2, '~']),
-            ...[13, 14, 15, 16, 17, 18, 19].map((y): Run => [y, 1, '~']),
-            [16, 8, 'ggh'], [17, 9, 'gh'],
-            [20, 7, 'st'], [21, 7, 'st'], [22, 6, 'st'], [23, 6, 'st'], [24, 5, 'st'],
-            [25, 2, 'pqqqr'], [26, 2, 'pqqqr'], [27, 2, 'pqqqr'], [28, 3, 'rr'], [24, 3, 'r'],
-            [18, 7, 'ab'], [19, 7, 'bc'],
+            [2, 6, '~~'], [3, 5, '~~'], [4, 4, '~~'], [5, 3, '~~'], [6, 3, '~'], [7, 2, '~~'],
+            ...[8, 9, 10, 11, 12, 13, 14, 15].map((y): Run => [y, 2, '~']),
+            [15, 7, 'ggh'], [16, 7, 'ghh'],
+            [15, 5, 'ab'], [16, 5, 'bc'],
+            [17, 4, 'st'], [18, 3, 'st'],
+            [19, 1, 'pqqr'], [20, 1, 'pqqr'], [21, 2, 'pq'], [18, 2, 'r'],
           ],
         },
-        // Impact: held there as the ground cracks, stone chips fly and a shockwave of dust rolls out.
+        // Bite: the blade sunk in; chips and sparks fly from the cut.
+        {
+          ms: 200,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [15, 7, 'ggh'], [16, 7, 'ghh'],
+            [15, 5, 'ab'], [16, 5, 'bc'],
+            [17, 4, 'st'], [18, 3, 'st'],
+            [19, 1, 'pqqr'], [20, 1, 'pqqr'], [21, 2, 'pq'], [18, 2, 'r'],
+            [17, 1, 'y'], [22, 1, 'y'], [23, 3, 'y'], [16, 2, 'v'], [23, 1, '~'], [22, 5, 'v'],
+          ],
+        },
+        { ms: 220, lean: 1, runs: axeUp },
+      ],
+    },
+  },
+  {
+    id: 'spade',
+    slot: 'weapon',
+    layers: { main: spadeUp },
+    action: {
+      verb: 'whack',
+      frames: [
+        // Raise: the spade heaved up overhead, blade to the sky.
         {
           ms: 240,
+          runs: [
+            ...raisedSleeve(11, 8, 8),
+            [1, 7, 'r'], [2, 6, 'rqr'], [3, 5, 'rqqqr'], [4, 5, 'pqqqr'], [5, 5, 'rqqqr'],
+            ...[6, 7, 8, 9, 10].map((y): Run => [y, 8, 'st']),
+            [11, 8, 'ab'], [12, 8, 'bc'],
+            [13, 8, 'tu'], [14, 7, 'sss'], [15, 7, 's.s'], [16, 8, 's'],
+          ],
+        },
+        // Whack: brought down flat through an arc.
+        {
+          ms: 110,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [3, 7, '~~'], [4, 5, '~~'], [5, 4, '~'], [6, 3, '~'], [7, 2, '~'],
+            ...[8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((y): Run => [y, 1, '~']),
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            [17, 6, 'ab'], [18, 6, 'bc'],
+            [19, 5, 'st'], [20, 4, 'st'],
+            [21, 1, 'rqqqr'], [22, 1, 'pqqqr'], [23, 1, 'rqqqr'],
+          ],
+        },
+        // Clang: a ringing starburst off the flat of the blade.
+        {
+          ms: 200,
           lean: 2,
           runs: [
             [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
             [16, 8, 'ggh'], [17, 9, 'gh'],
-            [20, 7, 'st'], [21, 7, 'st'], [22, 6, 'st'], [23, 6, 'st'], [24, 5, 'st'],
-            [25, 2, 'pqqqr'], [26, 2, 'pqqqr'], [27, 2, 'pqqqr'], [28, 3, 'rr'], [24, 3, 'r'],
-            [18, 7, 'ab'], [19, 7, 'bc'],
-            [29, 1, '~~~~~~~~~'], [28, 8, '~~'], [27, 10, '~'], [28, 1, '~'], [27, 1, '~'],
-            [22, 2, '~'], [23, 1, '~'], [21, 6, '~'], [20, 7, '~'],
-            [24, 9, 'v'], [22, 9, 'v'], [26, 10, 'v'], [21, 4, 'v'], [19, 2, 'v'],
+            [17, 6, 'ab'], [18, 6, 'bc'],
+            [19, 5, 'st'], [20, 4, 'st'],
+            [21, 1, 'rqqqr'], [22, 1, 'pqqqr'], [23, 1, 'rqqqr'],
+            [19, 1, '~'], [19, 3, '~'], [25, 1, '~'], [25, 3, '~'], [20, 6, '~'], [24, 6, '~'],
+            [18, 2, 'v'], [26, 2, 'v'], [22, 7, 'v'],
           ],
         },
-        // Recover: dragged back up, the head still low and heavy.
-        { ms: 280, lean: 1, runs: hammerUp(4) },
+        { ms: 240, lean: 1, runs: spadeUp },
       ],
     },
   },

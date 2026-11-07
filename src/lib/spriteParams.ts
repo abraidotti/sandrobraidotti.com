@@ -9,8 +9,8 @@ import { generatedName } from './spriteNames.ts';
 export interface Archetype {
   id: string;
   weight: number;
-  /** Allowed part ids per slot; null means the slot can be empty. Repeats weight the pick. */
-  parts: Record<Slot, (string | null)[]>;
+  /** Allowed part ids per slot; null means the slot can be empty (as is a slot left out). Repeats weight the pick. */
+  parts: Partial<Record<Slot, (string | null)[]>>;
   /** Restricts these materials to the named ramps. */
   palette?: Partial<Record<Material, string[]>>;
   /** Always (or never) corrupted, instead of one in five. */
@@ -37,7 +37,8 @@ export const ARCHETYPES: Archetype[] = [
       torso: ['gambeson'],
       legs: ['trousers'],
       cloak: [null, 'ragged cloak'],
-      weapon: ['falchion', 'spear'],
+      weapon: ['falchion', 'spear', 'hand axe'],
+      offhand: [null, null, 'round shield'],
     },
   },
   {
@@ -65,7 +66,8 @@ export const ARCHETYPES: Archetype[] = [
       torso: ['chainmail'],
       legs: ['greaves'],
       cloak: [null, 'ragged cloak', 'ragged cloak'],
-      weapon: ['warhammer'],
+      weapon: ['warhammer', 'flanged mace'],
+      offhand: [null, 'heater shield', 'heater shield'],
     },
   },
   {
@@ -79,7 +81,7 @@ export const ARCHETYPES: Archetype[] = [
       torso: ['oilskin coat'],
       legs: ['coat skirt'],
       cloak: [null, null, 'ragged cloak'],
-      weapon: ['lantern and dagger'],
+      weapon: ['lantern and dagger', 'lantern and dagger', 'spade'],
     },
   },
   {
@@ -94,6 +96,7 @@ export const ARCHETYPES: Archetype[] = [
       legs: ['robe skirt'],
       cloak: [null, 'ragged cloak'],
       weapon: ['staff'],
+      offhand: [null, null, 'grimoire'],
     },
   },
   {
@@ -171,7 +174,7 @@ export interface SpriteParams {
   corrupted: boolean;
 }
 
-const SLOTS: Slot[] = ['face', 'expression', 'mark', 'headgear', 'torso', 'legs', 'cloak', 'weapon'];
+const SLOTS: Slot[] = ['face', 'expression', 'mark', 'headgear', 'torso', 'legs', 'cloak', 'weapon', 'offhand'];
 
 /** Mix a hex colour toward another by `t` (0-1). */
 export function mix(a: string, b: string, t: number): string {
@@ -191,7 +194,7 @@ export function spriteParams(input: string, typed = false): SpriteParams {
   const archetype = weighted(ARCHETYPES.map((a): [Archetype, number] => [a, a.weight]));
   const parts: Partial<Record<Slot, string>> = {};
   for (const slot of SLOTS) {
-    const options = archetype.parts[slot].filter((id) => !id || (partById(id).builds ?? BUILDS).includes(build));
+    const options = (archetype.parts[slot] ?? [null]).filter((id) => !id || (partById(id).builds ?? BUILDS).includes(build));
     const id = pick(options);
     if (id) parts[slot] = id;
   }
