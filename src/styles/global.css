@@ -792,9 +792,14 @@ main {
   margin-inline: auto;
 }
 
-/* Two-frame idle: the frames take turns. */
+/* Two-frame idle: the frames take turns. Eyelids and flares stay hidden unless animating. */
 .sprite-art .frame-b {
   visibility: hidden;
+}
+
+.sprite-art .lids,
+.sprite-art .flares {
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -804,6 +809,27 @@ main {
   .sprite-art .frame-b {
     animation: sprite-frame-b 1.4s steps(1) infinite;
   }
+  /* A blink every four breaths, offset per sprite. */
+  .sprite-art .lids {
+    animation: sprite-blink 5.6s steps(1) infinite;
+    animation-delay: var(--blink-delay, 0s);
+  }
+  .sprite-art .flares {
+    animation: sprite-flicker 1.1s steps(1) infinite;
+  }
+}
+
+@keyframes sprite-blink {
+  0% { opacity: 1; }
+  3% { opacity: 0; }
+}
+
+@keyframes sprite-flicker {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  35% { opacity: 0; }
+  60% { opacity: 1; }
+  70% { opacity: 0; }
 }
 
 @keyframes sprite-frame-a {

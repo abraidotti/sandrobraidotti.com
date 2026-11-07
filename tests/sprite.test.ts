@@ -61,6 +61,17 @@ test('frames are 32×32 and the second one breathes', () => {
   }
 });
 
+test('every sprite can blink, and glowing pixels can flicker', () => {
+  for (const seed of MANY.slice(0, 50)) {
+    const p = spriteParams(seed);
+    const svg = renderSprite(p);
+    // Both frames close both eyes.
+    assert.equal((svg.match(/<g class="lids"><rect/g) ?? []).length, 2, `${seed}: no eyelids`);
+    const glowing = p.parts.weapon === 'staff' || p.corrupted;
+    assert.equal(/<g class="flares"><rect/.test(svg), glowing, `${seed}: flares`);
+  }
+});
+
 test('typed text is the name, as typed; hashes get generated names', () => {
   const typed = spriteParams('  Bartholomew ', true);
   assert.equal(typed.name, 'Bartholomew');

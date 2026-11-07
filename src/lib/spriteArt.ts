@@ -1,7 +1,10 @@
 // Renders SpriteParams as pixels: stacks the parts in draw order, colours them from the palette,
 // adds a dark outline, and makes a second "breathing" frame for the idle animation.
+// Each frame also carries hidden eyelids (for blinking) and flares over glowing pixels (for
+// flickering), which CSS shows and hides.
 // Pure string output so it works both at build time (Astro) and in the browser (machines).
 
+import { dice } from './seed.ts';
 import { DEEP, DRAW_ORDER, EYE, GLOW, LEGEND, OUTLINE, SIZE, partById, partLayer } from './spriteParts.ts';
 import { mix, type SpriteParams } from './spriteParams.ts';
 
@@ -10,15 +13,20 @@ export type Frame = (string | null)[][];
 
 /** The upper body (rows up to the belt) sinks a pixel on the second frame. */
 const WAIST = 20;
+/** On the second frame, the cloak's hem (from this row down) stirs a pixel. */
+const HEM = 23;
+/** Seconds per breath; blinks land on a whole number of breaths so they stay in step. */
+const BREATH = 1.4;
 
-function charGrid(params: SpriteParams): string[][] {
+function charGrid(params: SpriteParams, sway = false): string[][] {
   const grid = Array.from({ length: SIZE }, () => Array<string>(SIZE).fill('.'));
   for (const [slot, layer] of DRAW_ORDER) {
     const id = params.parts[slot];
     if (!id) continue;
     for (const [y, x, pixels] of partLayer(partById(id), params.build, layer)) {
+      const shift = sway && slot === 'cloak' && layer === 'back' && y >= HEM ? 1 : 0;
       [...pixels].forEach((ch, i) => {
-        if (ch !== '.') grid[y][x + i] = ch;
+        if (ch !== '.') grid[y][x + i + shift] = ch;
       });
     }
   }
@@ -66,11 +74,24 @@ function outline(frame: Frame): Frame {
   );
 }
 
+const glows = (params: SpriteParams, ch: string) => LEGEND[ch] === 'glow' || (params.corrupted && LEGEND[ch] === 'eye');
+
+/** The idle animation's two frames, with their eyelids and flares. */
+function frameSet(params: SpriteParams) {
+  const grids = [charGrid(params), breathe(charGrid(params, true))];
+  const lid = params.palette.skin[2];
+  const flare = mix(params.corrupted ? GLOW.corrupt : GLOW.ember, '#ffffff', 0.45);
+  return grids.map((g) => ({
+    frame: outline(g.map((row) => row.map((ch) => colour(params, ch)))),
+    lids: g.map((row) => row.map((ch) => (LEGEND[ch] === 'eye' ? lid : null))),
+    flares: g.map((row) => row.map((ch) => (glows(params, ch) ? flare : null))),
+  }));
+}
+
 /** The idle animation's two frames. */
 export function spriteFrames(params: SpriteParams): [Frame, Frame] {
-  const grid = charGrid(params);
-  const toFrame = (g: string[][]) => outline(g.map((row) => row.map((ch) => colour(params, ch))));
-  return [toFrame(grid), toFrame(breathe(grid))];
+  const [a, b] = frameSet(params);
+  return [a.frame, b.frame];
 }
 
 function escapeXml(s: string): string {
@@ -93,10 +114,16 @@ function rects(frame: Frame): string {
 }
 
 export function renderSprite(params: SpriteParams): string {
-  const [a, b] = spriteFrames(params);
   const label = escapeXml(`${params.name}, a ${params.corrupted ? 'corrupted ' : ''}${params.archetype}`);
+  const frames = frameSet(params)
+    .map(({ frame, lids, flares }, i) =>
+      `<g class="frame-${'ab'[i]}">${rects(frame)}<g class="lids">${rects(lids)}</g><g class="flares">${rects(flares)}</g></g>`,
+    )
+    .join('');
+  // Everyone blinks every few breaths, each on their own beat.
+  const blinkDelay = -dice(`${params.seed}:blink`).int(0, 3) * BREATH;
   return (
-    `<svg class="sprite-art" viewBox="0 0 ${SIZE} ${SIZE}" shape-rendering="crispEdges" role="img" aria-label="${label}" xmlns="http://www.w3.org/2000/svg">` +
-    `<g class="frame-a">${rects(a)}</g><g class="frame-b">${rects(b)}</g></svg>`
+    `<svg class="sprite-art" viewBox="0 0 ${SIZE} ${SIZE}" shape-rendering="crispEdges" role="img" aria-label="${label}" style="--blink-delay:${blinkDelay}s" xmlns="http://www.w3.org/2000/svg">` +
+    `${frames}</svg>`
   );
 }
