@@ -10,11 +10,7 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
 <Base title="Commit Song Machine" description="Turn any commit hash or text into a little song and a picture.">
   <div class="page-intro">
     <h1>Commit Song Machine</h1>
-    <p>
-      Paste a commit hash, or type anything, to get a chord progression and a picture of it. Height is pitch, and tails
-      show how long a note rings. Shapes show each chord's feeling: ● major, ■ minor, ▲ suspended, and jagged for the
-      strange ones. Below that: the bass, then the drums (dots are hi-hats, diamonds snare, squares kick).
-    </p>
+    <p>Paste a commit hash, or type anything, to get a chord progression and a picture of it.</p>
   </div>
   <section class="panel machine">
     <form class="machine-input" data-machine-form>
@@ -25,6 +21,86 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
     <CommitSong hash={initial} size="full" />
     <p class="progression" data-progression>{progression(commitParams(initial))}</p>
   </section>
+
+  <article class="panel machine">
+    <div class="prose">
+      <p>
+        Every post on this site gets a song from the git commit that created it. This machine is the same generator, and
+        you can feed it anything. The same text always makes the same song, note for note.
+      </p>
+
+      <h2>From text to seed</h2>
+      <p>
+        Whatever you type is hashed into four 32-bit numbers, which seed a small random number generator. Every choice
+        below is a roll of that generator, made in a fixed order. Change one character and every roll changes, so you get
+        a completely different song.
+      </p>
+
+      <h2>The harmony</h2>
+      <p>
+        The song is four bars long: eight chords, half a bar each, which loop. First it picks a key (any of the twelve)
+        and a progression from a small library of classic ones. The library leans dark: most of the progressions are in
+        minor modes.
+      </p>
+      <ul>
+        <li>i–VI–III–VII, the wistful minor loop</li>
+        <li>the Andalusian cadence, i–VII–VI–V, walking down to a major V</li>
+        <li>i–VI–iv–V</li>
+        <li>the minor circle of fifths, eight chords long</li>
+        <li>i–iv–VII–III and iv–VI–VII–i</li>
+        <li>dorian i–III–VII–IV, and a two-chord dorian vamp</li>
+        <li>two phrygian progressions built on the dark ♭II</li>
+        <li>and, rarely, a bittersweet major I–vi–IV–iv or a floating lydian I–II</li>
+      </ul>
+      <p>
+        Each chord is built by stacking thirds within the mode, as a 7th or a 9th. Some progressions borrow a chord from
+        outside the mode, like a major V in a minor key, or a minor iv in a major one. A few chords get a suspended
+        colour, but never the home chord or a borrowed one. Each chord is spelled once, so a four-chord progression
+        repeats exactly the second time round.
+      </p>
+      <p>
+        Chords are kept to four notes and voiced open, spread across about an octave and a half. The fifth is the first
+        note to go, because it adds the least colour. Each voicing is the one closest to the previous chord, so the
+        harmony moves smoothly instead of jumping around.
+      </p>
+      <p>
+        Most songs are pure dream. About four in ten carry some unease. Their tape wobble is deeper, and once the loop
+        has been heard, one chord in the second half may be swapped for something strange: a chromatic root with an
+        out-of-key colour, slightly out of tune.
+      </p>
+
+      <h2>The performance</h2>
+      <p>
+        Each song plays its chords one of four ways: held as a pad, strummed note by note, arpeggiated throughout, or
+        pulsed in a seeded rhythm. Songs that aren't arpeggiated get a soft arpeggio over the chords for two bars, one in
+        each half. The tempo is somewhere between 76 and 112 bpm. The sound is one of four synth voices: velvet (detuned
+        saws), glass (bell-like), hollow (woody and a little eerie) or choir (a slow organ haze). The bass holds each
+        chord's root underneath.
+      </p>
+
+      <h2>The drums</h2>
+      <p>
+        The beat is one of four grooves: backbeat, half-time, four on the floor or shuffle. It repeats every bar, and
+        the last bar ends with a small fill: a snare roll, a kick pickup, or a hi-hat that drops out. Sometimes bar 3
+        takes a breath. A lone kick lands on the downbeat, and the chord comes in late.
+      </p>
+
+      <h2>The sound</h2>
+      <p>
+        Everything passes through a slow tape wobble that bends the pitch, plus reverb and a delay timed to the tempo.
+        The chords also duck on every kick and swell back between hits, and a slow phaser sweeps through them. The speed
+        and depth of each effect are seeded too, so some songs barely move and others churn.
+      </p>
+
+      <h2>Reading the picture</h2>
+      <p>
+        The picture is the score. Time runs left to right, and height is pitch. Tails show how long a note rings, and
+        each chord gets its own colour. Shapes show each chord's feeling: ● major, ■ minor, ▲ suspended, and jagged for
+        the strange ones. Below that is the bass, then the drums: dots are hi-hats, diamonds snare, squares kick. The
+        same numbers drive the picture and the sound, so what you see is what you hear.
+      </p>
+    </div>
+  </article>
 </Base>
 
 <script>

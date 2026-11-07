@@ -749,6 +749,10 @@ main {
   padding: clamp(20px, 4vw, 36px);
 }
 
+.machine + .machine {
+  margin-top: 28px;
+}
+
 .machine-input {
   display: flex;
   flex-wrap: wrap;
