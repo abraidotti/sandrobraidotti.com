@@ -917,6 +917,8 @@ main {
 .sprite-ledger {
   display: grid;
   grid-template-columns: max-content 1fr;
+  /* Each label sits on the same baseline as the first line of its entry. */
+  align-items: baseline;
   gap: 8px 18px;
   max-width: 34rem;
   margin: 24px auto 0;
@@ -926,7 +928,6 @@ main {
 }
 
 .sprite-ledger dt {
-  padding-top: 0.2em;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.16em;

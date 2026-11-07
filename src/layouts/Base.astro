@@ -40,6 +40,13 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta name="theme-color" content="#0e0b0d" />
+    <!-- Apply the visitor's remembered sprite Animate/Pause choice before anything paints. -->
+    <script is:inline>
+      try {
+        const motion = localStorage.getItem('sprite-motion');
+        if (motion === 'on' || motion === 'off') document.documentElement.dataset.spriteMotion = motion;
+      } catch {}
+    </script>
   </head>
   <body>
     <header class="site-header">

@@ -110,6 +110,12 @@ export function spriteFrames(params: SpriteParams): [Frame, Frame] {
   return [a.frame, b.frame];
 }
 
+/** What clicking the sprite does, for screen readers: "Make Gallbinder attack". */
+export function actLabel(params: SpriteParams): string {
+  const verb = params.parts.weapon ? partById(params.parts.weapon).action?.verb : undefined;
+  return verb ? `Make ${params.name} ${verb}` : params.name;
+}
+
 /** The weapon's action, if it has one: its verb and each frame with its duration. */
 export function spriteAction(params: SpriteParams) {
   const action = params.parts.weapon ? partById(params.parts.weapon).action : undefined;

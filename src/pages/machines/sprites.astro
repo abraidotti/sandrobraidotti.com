@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import { recentCommits } from '../../lib/git.ts';
 import { describeSprite, displayName, spriteParams } from '../../lib/spriteParams.ts';
-import { renderSprite } from '../../lib/spriteArt.ts';
+import { actLabel, renderSprite } from '../../lib/spriteArt.ts';
 import { spriteStory } from '../../lib/spriteStory.ts';
 
 const initial = recentCommits(1)[0]?.hash ?? 'hello world';
@@ -26,7 +26,7 @@ const params = spriteParams(initial);
       <button type="button" class="pill-btn ghost" data-random>Random</button>
     </form>
     <figure class="sprite">
-      <button type="button" class="sprite-stage" data-sprite-art aria-label="Make them act" set:html={renderSprite(params)} />
+      <button type="button" class="sprite-stage" data-sprite-art aria-label={actLabel(params)} set:html={renderSprite(params)} />
       <figcaption>
         <h2 class="sprite-name" data-sprite-name>{displayName(params.name)}</h2>
         <p class="sprite-meta" data-sprite-meta>{describeSprite(params)}</p>
@@ -36,11 +36,76 @@ const params = spriteParams(initial);
       </figcaption>
     </figure>
   </section>
+
+  <article class="panel machine">
+    <div class="prose">
+      <p>
+        Every name, word or scrap of gibberish belongs to exactly one member of the company. Type the same thing twice
+        and you meet the same character, down to the last pixel and the last line of their record.
+      </p>
+
+      <h2>From a name to a character</h2>
+      <p>
+        Whatever you type is hashed into a seed, and the seed rolls a fixed sequence of dice. The first roll picks a
+        build: one of three body types. The next picks what they are in the company. Then one hand-drawn part for
+        each slot: a face, an expression, sometimes a mark, headgear, a torso, legs, sometimes a cloak, and a weapon.
+        The parts are drawn on the same 32×32 template, facing left and lit from the top left, so any of them fit
+        together.
+      </p>
+      <p>
+        Parts carry no colours of their own. Each pixel names a material and a shade, and the seed picks a muted
+        palette for each material: skin, hair, cloth, trim, leather, metal, wood and bone. About one character in five
+        comes out wrong: a blighted palette and eyes that glow green.
+      </p>
+
+      <h2>The company</h2>
+      <ul>
+        <li><strong>Sellswords</strong> with a falchion or a spear</li>
+        <li><strong>Crossbowmen</strong> in leather jerkins and broad hats</li>
+        <li><strong>Fallen knights</strong> in chainmail and battered great helms, swinging warhammers</li>
+        <li><strong>Gravediggers</strong> with a lantern and a dagger</li>
+        <li><strong>Hedge-wizards</strong> with an ember-tipped staff</li>
+        <li><strong>Cultists</strong>, faces lost in pointed cowls, carrying sickles</li>
+        <li><strong>Scouts</strong> with shortbows</li>
+        <li>and, less often, one of <strong>the Taken</strong>: masked sorcerers who always glow</li>
+      </ul>
+      <p>
+        Very rarely, about one name in a hundred, something else answers: a <strong>forvalaka</strong>.
+      </p>
+
+      <h2>Names and records</h2>
+      <p>
+        If you type something, that is their name. Leave a hash and they get a nickname, chosen to fit what they
+        wear or carry or how they look. The corrupted and the Taken go by titles instead. None of the names belong to
+        characters from the books.
+      </p>
+      <p>
+        Each character also gets an entry in the company's records, written by a dry annalist: where they enlisted;
+        a few details from among their rank, reasons, kin, kit, marks, habits, debts, wounds and deeds; and how it
+        ended, or hasn't yet. The Taken get a file of their own, and the forvalaka a bestiary entry.
+      </p>
+
+      <h2>Moving</h2>
+      <p>
+        At rest, every character breathes, blinks every few breaths on a beat of their own, and lets their cloak stir.
+        Anything that glows flickers. Click a character, or tab to them and press Enter, and they act: a swing, a
+        thrust, a cast, a shot, a pounce. If your device asks websites to reduce motion, they start still; the button at
+        the top lets you animate them anyway.
+      </p>
+
+      <h2>The style</h2>
+      <p>
+        The look is 16-bit JRPG pixel art: chunky 32×32 sprites, a dark outline, a handful of shades per material. It is
+        fan art in the style of Glen Cook's <cite>The Black Company</cite>, and the characters are invented, not
+        taken from the books.
+      </p>
+    </div>
+  </article>
 </Base>
 
 <script>
   import { describeSprite, displayName, spriteParams } from '../../lib/spriteParams.ts';
-  import { renderSprite } from '../../lib/spriteArt.ts';
+  import { actLabel, renderSprite } from '../../lib/spriteArt.ts';
   import { spriteStory } from '../../lib/spriteStory.ts';
 
   const form = document.querySelector<HTMLFormElement>('[data-sprite-form]')!;
@@ -55,6 +120,7 @@ const params = spriteParams(initial);
   function show(text: string, typed: boolean) {
     const params = spriteParams(text, typed);
     art.innerHTML = renderSprite(params);
+    art.setAttribute('aria-label', actLabel(params));
     nameEl.textContent = displayName(params.name);
     metaEl.textContent = describeSprite(params);
     ledgerEl.replaceChildren(
@@ -83,7 +149,7 @@ const params = spriteParams(initial);
   });
 
   // Motion follows the viewer's reduced-motion setting until they choose with the toggle;
-  // the choice is remembered in this browser.
+  // the choice is remembered in this browser and applies wherever sprites appear.
   const root = document.documentElement;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const toggle = document.querySelector<HTMLButtonElement>('[data-sprite-motion-toggle]')!;
@@ -97,10 +163,6 @@ const params = spriteParams(initial);
         ? 'Your device asks websites to reduce motion, so the sprites start still. You can animate them anyway.'
         : 'Sprites breathe, blink and act when clicked.';
   };
-  try {
-    const saved = localStorage.getItem('sprite-motion');
-    if (saved === 'on' || saved === 'off') root.dataset.spriteMotion = saved;
-  } catch {}
   toggle.addEventListener('click', () => {
     root.dataset.spriteMotion = moving() ? 'off' : 'on';
     try {
