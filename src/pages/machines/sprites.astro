@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import { recentCommits } from '../../lib/git.ts';
 import { describeSprite, displayName, spriteParams } from '../../lib/spriteParams.ts';
 import { renderSprite } from '../../lib/spriteArt.ts';
+import { spriteStory } from '../../lib/spriteStory.ts';
 
 const initial = recentCommits(1)[0]?.hash ?? 'hello world';
 const params = spriteParams(initial);
@@ -29,6 +30,9 @@ const params = spriteParams(initial);
       <figcaption>
         <h2 class="sprite-name" data-sprite-name>{displayName(params.name)}</h2>
         <p class="sprite-meta" data-sprite-meta>{describeSprite(params)}</p>
+        <dl class="sprite-ledger" data-sprite-ledger>
+          {spriteStory(params).map(({ label, text }) => <><dt>{label}</dt><dd>{text}</dd></>)}
+        </dl>
       </figcaption>
     </figure>
   </section>
@@ -37,6 +41,7 @@ const params = spriteParams(initial);
 <script>
   import { describeSprite, displayName, spriteParams } from '../../lib/spriteParams.ts';
   import { renderSprite } from '../../lib/spriteArt.ts';
+  import { spriteStory } from '../../lib/spriteStory.ts';
 
   const form = document.querySelector<HTMLFormElement>('[data-sprite-form]')!;
   const input = form.querySelector('input')!;
@@ -44,6 +49,7 @@ const params = spriteParams(initial);
   const art = document.querySelector<HTMLElement>('[data-sprite-art]')!;
   const nameEl = document.querySelector<HTMLElement>('[data-sprite-name]')!;
   const metaEl = document.querySelector<HTMLElement>('[data-sprite-meta]')!;
+  const ledgerEl = document.querySelector<HTMLElement>('[data-sprite-ledger]')!;
 
   // A hash (the default, Random, or ?seed=) gets a generated name; typed text (or ?name=) is the name.
   function show(text: string, typed: boolean) {
@@ -51,6 +57,15 @@ const params = spriteParams(initial);
     art.innerHTML = renderSprite(params);
     nameEl.textContent = displayName(params.name);
     metaEl.textContent = describeSprite(params);
+    ledgerEl.replaceChildren(
+      ...spriteStory(params).flatMap(({ label, text }) => {
+        const dt = document.createElement('dt');
+        const dd = document.createElement('dd');
+        dt.textContent = label;
+        dd.textContent = text;
+        return [dt, dd];
+      }),
+    );
     const url = new URL(location.href);
     url.search = text === initial && !typed ? '' : new URLSearchParams({ [typed ? 'name' : 'seed']: text }).toString();
     history.replaceState(null, '', url);

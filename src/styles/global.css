@@ -913,6 +913,41 @@ main {
   margin: 0;
 }
 
+/* The company ledger: a label column and the annalist's entries. */
+.sprite-ledger {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 18px;
+  max-width: 34rem;
+  margin: 24px auto 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+
+.sprite-ledger dt {
+  padding-top: 0.2em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.sprite-ledger dd {
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .sprite-ledger {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .sprite-ledger dd + dt {
+    margin-top: 10px;
+  }
+}
+
 .sprite-credit {
   font-size: 0.95rem;
   font-style: italic;

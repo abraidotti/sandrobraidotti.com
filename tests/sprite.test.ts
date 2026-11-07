@@ -4,6 +4,7 @@ import { DRAW_ORDER, LEGEND, PARTS, SIZE } from '../src/lib/spriteParts.ts';
 import { ARCHETYPES, displayName, spriteParams } from '../src/lib/spriteParams.ts';
 import { BLOCKLIST } from '../src/lib/spriteNames.ts';
 import { renderSprite, spriteFrames } from '../src/lib/spriteArt.ts';
+import { spriteStory } from '../src/lib/spriteStory.ts';
 
 const MANY = Array.from({ length: 500 }, (_, i) => `seed-${i}`);
 
@@ -115,6 +116,24 @@ test('generated names never borrow from the books', () => {
 test('some sprites come out corrupted, most do not', () => {
   const corrupted = MANY.filter((s) => spriteParams(s).corrupted).length;
   assert.ok(corrupted > MANY.length * 0.1 && corrupted < MANY.length * 0.3, `${corrupted}/${MANY.length} corrupted`);
+});
+
+test('every character gets a ledger entry: enlisted first, an ending last', () => {
+  for (const seed of MANY) {
+    const p = spriteParams(seed);
+    const story = spriteStory(p);
+    assert.deepEqual(story, spriteStory(spriteParams(seed)), `${seed}: story not stable`);
+    assert.ok(story.length >= 4 && story.length <= 6, `${seed}: ${story.length} lines`);
+    assert.equal(story[0].label, 'Enlisted');
+    assert.equal(story.at(-1)!.label, p.corrupted ? 'Remarks' : story.at(-1)!.label === 'Fate' ? 'Fate' : 'Status');
+  }
+});
+
+test('ledgers say "they" and keep clear of the books', () => {
+  const PLACES = ['juniper', 'charm', 'roses', 'oar', 'beryl', 'gea-xle', 'taglios', 'opal', 'barrowland', 'khatovar', 'dejagore', 'kiaulune', 'forsberg', 'the plain of fear'];
+  const text = MANY.flatMap((s) => spriteStory(spriteParams(s)).map((l) => l.text)).join(' ').toLowerCase();
+  assert.doesNotMatch(text, /\b(he|she|his|her|hers|him|himself|herself)\b/);
+  for (const place of PLACES) assert.ok(!new RegExp(`\\b${place}\\b`).test(text), `mentions ${place}`);
 });
 
 test('long names are shortened for display only', () => {
