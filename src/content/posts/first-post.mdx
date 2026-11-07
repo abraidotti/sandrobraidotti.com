@@ -23,7 +23,8 @@ Here's roughly how a hash becomes a song:
 ```ts
 const rand = sfc32(...cyrb128(hash));   // seeded, so same hash = same song
 const key = int(0, 11);
-const modeName = weighted(MODE_WEIGHTS);
+const prog = weighted(PROGRESSIONS.map((p) => [p, p.weight]));  // mostly dark, minor ones
+const modeName = prog.mode;
 const tempo = int(76, 112);
 const timbre = pick(['velvet', 'glass', 'hollow', 'choir']);
 const unease = rand() < 0.6 ? 0 : 0.25 + rand() * 0.55;  // most songs are pure dream
