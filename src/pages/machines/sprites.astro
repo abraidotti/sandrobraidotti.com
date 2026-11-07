@@ -26,7 +26,10 @@ const params = spriteParams(initial);
       <button type="button" class="pill-btn ghost" data-random>Random</button>
     </form>
     <figure class="sprite">
-      <button type="button" class="sprite-stage" data-sprite-art aria-label={actLabel(params)} set:html={renderSprite(params)} />
+      <div class="sprite-holder" data-sprite-holder>
+        <button type="button" class="sprite-stage" data-sprite-art aria-label={actLabel(params)} set:html={renderSprite(params)} />
+        <span class="sprite-click" aria-hidden="true">click!</span>
+      </div>
       <figcaption>
         <h2 class="sprite-name" data-sprite-name>{displayName(params.name)}</h2>
         <p class="sprite-meta" data-sprite-meta>{describeSprite(params)}</p>
@@ -37,7 +40,11 @@ const params = spriteParams(initial);
     </figure>
   </section>
 
-  <article class="panel machine">
+  <details class="panel machine explainer">
+    <summary>
+      <span class="explainer-title">How it works</span>
+      <span class="explainer-hint">Expand to learn how this works</span>
+    </summary>
     <div class="prose">
       <p>
         Every name, word or scrap of gibberish belongs to exactly one member of the company. Type the same thing twice
@@ -100,7 +107,7 @@ const params = spriteParams(initial);
         taken from the books.
       </p>
     </div>
-  </article>
+  </details>
 </Base>
 
 <script>
@@ -177,6 +184,8 @@ const params = spriteParams(initial);
   // With motion paused, it just holds the key frame (the strike) for a moment.
   let acting: number | undefined;
   art.addEventListener('click', () => {
+    // The "click!" tag has done its job once they've clicked.
+    document.querySelector('[data-sprite-holder]')!.classList.add('clicked');
     const svg = art.querySelector<SVGSVGElement>('svg');
     const durations = svg?.dataset.actMs?.split(',').map(Number);
     if (!svg || !durations) return;

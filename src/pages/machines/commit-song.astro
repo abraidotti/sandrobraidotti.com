@@ -22,7 +22,11 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
     <p class="progression" data-progression>{progression(commitParams(initial))}</p>
   </section>
 
-  <article class="panel machine">
+  <details class="panel machine explainer">
+    <summary>
+      <span class="explainer-title">How it works</span>
+      <span class="explainer-hint">Expand to learn how this works</span>
+    </summary>
     <div class="prose">
       <p>
         Every post on this site gets a song from the git commit that created it. This machine is the same generator, and
@@ -100,7 +104,7 @@ const initial = recentCommits(1)[0]?.hash ?? 'hello world';
         same numbers drive the picture and the sound, so what you see is what you hear.
       </p>
     </div>
-  </article>
+  </details>
 </Base>
 
 <script>

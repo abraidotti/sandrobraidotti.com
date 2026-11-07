@@ -753,6 +753,62 @@ main {
   margin-top: 28px;
 }
 
+/* A machine's explanation, collapsed until asked for. */
+.explainer summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.explainer summary::-webkit-details-marker {
+  display: none;
+}
+
+.explainer-title {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+
+.explainer-title::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 10px;
+  color: var(--accent);
+  transition: transform 0.2s;
+}
+
+.explainer[open] .explainer-title::before {
+  transform: rotate(90deg);
+}
+
+.explainer-hint {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.explainer[open] .explainer-hint {
+  display: none;
+}
+
+.explainer summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.explainer[open] summary {
+  margin-bottom: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explainer-title::before {
+    transition: none;
+  }
+}
+
 .machine-input {
   display: flex;
   flex-wrap: wrap;
@@ -817,12 +873,14 @@ main {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  :root:not([data-sprite-motion='off']) .sprite-art * {
+  :root:not([data-sprite-motion='off']) .sprite-art *,
+  :root:not([data-sprite-motion='off']) .sprite-click {
     animation-play-state: running;
   }
 }
 
-:root[data-sprite-motion='on'] .sprite-art * {
+:root[data-sprite-motion='on'] .sprite-art *,
+:root[data-sprite-motion='on'] .sprite-click {
   animation-play-state: running;
 }
 
@@ -844,6 +902,57 @@ main {
 .sprite-art[data-act='4'] .act-4,
 .sprite-art[data-act='5'] .act-5 {
   visibility: visible;
+}
+
+/* The sprite and its little "click!" tag. */
+.sprite-holder {
+  position: relative;
+  width: min(256px, 70%);
+  margin-inline: auto;
+}
+
+.sprite-holder .sprite-art {
+  width: 100%;
+}
+
+.sprite-click {
+  position: absolute;
+  top: 4%;
+  right: -6%;
+  padding: 3px 10px 2px;
+  /* Capitals, spaced, no ligatures: in a tight italic, "cl" reads as "d". */
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-ligatures: none;
+  color: var(--on-accent);
+  background: var(--accent);
+  border-radius: 999px;
+  transform: rotate(8deg);
+  pointer-events: none;
+  transition: opacity 0.4s;
+  animation: sprite-click-bob 1.6s ease-in-out infinite paused;
+}
+
+/* A little tail pointing down at the sprite. */
+.sprite-click::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 30%;
+  border: 6px solid transparent;
+  border-top-color: var(--accent);
+  border-bottom: 0;
+}
+
+.sprite-holder.clicked .sprite-click {
+  opacity: 0;
+}
+
+@keyframes sprite-click-bob {
+  0%, 100% { transform: rotate(8deg) translateY(0); }
+  50% { transform: rotate(8deg) translateY(-5px); }
 }
 
 .sprite-stage {
