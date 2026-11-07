@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BAR, STEPS, STEPS_PER_CHORD, commitParams, progression } from '../src/lib/commitParams.ts';
 import { renderCommitArt } from '../src/lib/commitArt.ts';
+import { branchName } from '../src/lib/git.ts';
 
 const HASHES = [
   '270adff4c8e0b1f6a2d3e4f5a6b7c8d9e0f1a2b3',
@@ -91,6 +92,15 @@ test('late entry: bar 3 opens with a lone kick, chord arrives on the third eight
 test('mostly dreamy, sometimes unsettling', () => {
   const uneasy = MANY.filter((h) => commitParams(h).chords.some((c) => c.family === 'strange')).length;
   assert.ok(uneasy > MANY.length * 0.15 && uneasy < MANY.length * 0.5, `${uneasy}/${MANY.length} songs have strange chords`);
+});
+
+test('merge messages name their branches; syncs of main are not branches', () => {
+  assert.equal(branchName('Merge branch \'sprite-machine\''), 'sprite-machine');
+  assert.equal(branchName('Merge branch \'meta-tree\' into main'), 'meta-tree');
+  assert.equal(branchName('Merge pull request #18 from abraidotti/feature/graphql'), 'feature/graphql');
+  assert.equal(branchName('Merge branch \'master\' of https://github.com/abraidotti/sandrobraidotti.com into master'), null);
+  assert.equal(branchName('Merge remote-tracking branch \'origin/main\''), null);
+  assert.equal(branchName('Add the cultist and the scout'), null);
 });
 
 test('SVG escapes user-supplied text', () => {
