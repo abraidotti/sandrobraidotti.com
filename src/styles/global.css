@@ -792,36 +792,43 @@ main {
   margin-inline: auto;
 }
 
-/* Two-frame idle: the frames take turns. Eyelids and flares stay hidden unless animating. */
-.sprite-art .frame-b {
-  visibility: hidden;
+/* Idle animation: the two frames take turns, eyelids blink, flares flicker. Every animation starts
+   on the resting pose and stays paused there unless motion is allowed: by default when the viewer
+   doesn't prefer reduced motion, and either way when the page's toggle says so. */
+.sprite-art .frame-a {
+  animation: sprite-frame-a 1.4s steps(1) infinite paused;
 }
 
-.sprite-art .lids,
+.sprite-art .frame-b {
+  visibility: hidden;
+  animation: sprite-frame-b 1.4s steps(1) infinite paused;
+}
+
+/* A blink every four breaths, offset per sprite. */
+.sprite-art .lids {
+  opacity: 0;
+  animation: sprite-blink 5.6s steps(1) infinite paused;
+  animation-delay: var(--blink-delay, 0s);
+}
+
 .sprite-art .flares {
   opacity: 0;
+  animation: sprite-flicker 1.1s steps(1) infinite paused;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .sprite-art .frame-a {
-    animation: sprite-frame-a 1.4s steps(1) infinite;
-  }
-  .sprite-art .frame-b {
-    animation: sprite-frame-b 1.4s steps(1) infinite;
-  }
-  /* A blink every four breaths, offset per sprite. */
-  .sprite-art .lids {
-    animation: sprite-blink 5.6s steps(1) infinite;
-    animation-delay: var(--blink-delay, 0s);
-  }
-  .sprite-art .flares {
-    animation: sprite-flicker 1.1s steps(1) infinite;
+  :root:not([data-sprite-motion='off']) .sprite-art * {
+    animation-play-state: running;
   }
 }
 
+:root[data-sprite-motion='on'] .sprite-art * {
+  animation-play-state: running;
+}
+
 @keyframes sprite-blink {
-  0% { opacity: 1; }
-  3% { opacity: 0; }
+  0% { opacity: 0; }
+  97% { opacity: 1; }
 }
 
 @keyframes sprite-flicker {
@@ -852,4 +859,8 @@ main {
   margin: 0;
   font-style: italic;
   color: var(--accent);
+}
+
+.sprite-motion {
+  margin: 16px 0 0;
 }

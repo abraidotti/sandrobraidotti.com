@@ -24,6 +24,9 @@ const params = spriteParams(initial);
       <figcaption>
         <h2 class="sprite-name" data-sprite-name>{displayName(params.name)}</h2>
         <p class="sprite-meta" data-sprite-meta>{describeSprite(params)}</p>
+        <p class="pill-row sprite-motion">
+          <button type="button" class="pill-btn ghost" data-sprite-motion-toggle aria-pressed="false">Animate</button>
+        </p>
       </figcaption>
     </figure>
   </section>
@@ -61,6 +64,30 @@ const params = spriteParams(initial);
     input.value = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
     show(input.value, false);
   });
+
+  // Motion follows the viewer's reduced-motion setting until they choose with the toggle;
+  // the choice is remembered in this browser.
+  const root = document.documentElement;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-sprite-motion-toggle]')!;
+  const moving = () => (root.dataset.spriteMotion ? root.dataset.spriteMotion === 'on' : !reduce.matches);
+  const showToggle = () => {
+    toggle.setAttribute('aria-pressed', String(moving()));
+    toggle.textContent = moving() ? 'Pause' : 'Animate';
+  };
+  try {
+    const saved = localStorage.getItem('sprite-motion');
+    if (saved === 'on' || saved === 'off') root.dataset.spriteMotion = saved;
+  } catch {}
+  toggle.addEventListener('click', () => {
+    root.dataset.spriteMotion = moving() ? 'off' : 'on';
+    try {
+      localStorage.setItem('sprite-motion', root.dataset.spriteMotion);
+    } catch {}
+    showToggle();
+  });
+  reduce.addEventListener('change', showToggle);
+  showToggle();
 
   const query = new URLSearchParams(location.search);
   const name = query.get('name')?.trim();
