@@ -1,36 +1,86 @@
 ---
 import Base from '../layouts/Base.astro';
 import CommitSong from '../components/CommitSong.astro';
-import { REPO_URL, recentCommits } from '../lib/git.ts';
+import { REPO_URL, mainTimeline, type Commit } from '../lib/git.ts';
 import { formatDate } from '../lib/posts.ts';
 
-const commits = recentCommits(30);
+const timeline = mainTimeline();
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const span = (commits: Commit[], merge: Commit) => {
+  const first = formatDate(commits.at(-1)?.date ?? merge.date);
+  const last = formatDate(merge.date);
+  return first === last ? last : `${first} – ${last}`;
+};
 ---
 
-<Base title="Meta" description="Recent commits to this site, each with its own generated song.">
+<Base title="Meta" description="This site's history: every commit to main and every branch merged into it, each with its own generated song.">
   <div class="page-intro">
     <h1>Meta</h1>
     <p>
-      The latest changes to <a href={REPO_URL}>this site's repo</a>, each with its own generated song. Press play to hear
-      a commit.
+      The history of <a href={REPO_URL}>this site's repo</a>, newest first: commits made straight on main, and the
+      branches merged into it. Every commit has its own generated song; press play to hear one.
     </p>
   </div>
-  <ol class="panel commit-list">
+  <ol class="git-tree">
     {
-      commits.map((commit) => (
-        <li>
-          <CommitSong hash={commit.hash} size="thumb" />
-          <div>
-            <p class="commit-subject">{commit.subject}</p>
-            <p class="commit-detail">
-              <a href={commit.url}>
-                <code>{commit.hash.slice(0, 7)}</code>
-              </a>{' '}
-              · {formatDate(commit.date)} · {commit.author}
-            </p>
-          </div>
-        </li>
-      ))
+      timeline.map((entry) =>
+        entry.kind === 'commit' ? (
+          <li class="git-commit">
+            <span class="git-commit-dot" aria-hidden="true" />
+            <CommitSong hash={entry.commit.hash} size="thumb" />
+            <div>
+              <p class="commit-subject">{entry.commit.subject}</p>
+              <p class="commit-detail">
+                <a href={entry.commit.url}>
+                  <code>{entry.commit.hash.slice(0, 7)}</code>
+                </a>{' '}
+                · {formatDate(entry.commit.date)} · {entry.commit.author}
+              </p>
+            </div>
+          </li>
+        ) : (
+          <li class="git-branch">
+            <span class="git-lane" aria-hidden="true" />
+            <span class="git-merge-dot" aria-hidden="true" />
+            <article class="panel git-card">
+              <header class="git-card-head">
+                <CommitSong hash={entry.branch.merge.hash} size="thumb" />
+                <div>
+                  <h2 class="git-branch-name">
+                    <code>{entry.branch.name}</code>
+                  </h2>
+                  <p class="commit-detail">
+                    merged in{' '}
+                    <a href={entry.branch.merge.url}>
+                      <code>{entry.branch.merge.hash.slice(0, 7)}</code>
+                    </a>{' '}
+                    · {plural(entry.branch.commits.length, 'commit')} · {span(entry.branch.commits, entry.branch.merge)}
+                  </p>
+                </div>
+              </header>
+              <details class="git-commits">
+                <summary>Show the {plural(entry.branch.commits.length, 'commit')}</summary>
+                <ol class="commit-list">
+                  {entry.branch.commits.map((commit) => (
+                    <li>
+                      <CommitSong hash={commit.hash} size="thumb" />
+                      <div>
+                        <p class="commit-subject">{commit.subject}</p>
+                        <p class="commit-detail">
+                          <a href={commit.url}>
+                            <code>{commit.hash.slice(0, 7)}</code>
+                          </a>{' '}
+                          · {formatDate(commit.date)} · {commit.author}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            </article>
+          </li>
+        ),
+      )
     }
   </ol>
 </Base>

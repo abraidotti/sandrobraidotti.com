@@ -726,6 +726,114 @@ main {
   font-size: 0.85em;
 }
 
+/* ---------- meta: a git tree of merged branches ---------- */
+/* main runs down the left; each branch forks off to the right below its card and rejoins at the top. */
+.git-tree {
+  --main-x: 14px;
+  --lane-x: 40px;
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 0 0 calc(var(--lane-x) + 22px);
+  list-style: none;
+}
+
+.git-tree::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--main-x);
+  border-left: 2px solid var(--accent);
+}
+
+.git-branch {
+  position: relative;
+  padding: 18px 0;
+}
+
+/* The branch's lane: out from main, down beside the card, and back in. */
+.git-lane {
+  position: absolute;
+  top: 34px;
+  bottom: 6px;
+  left: calc(var(--main-x) - var(--lane-x) - 22px + 2px);
+  width: calc(var(--lane-x) - var(--main-x));
+  border: 2px solid var(--accent-2);
+  border-left: 0;
+  border-radius: 0 14px 14px 0;
+}
+
+.git-merge-dot {
+  position: absolute;
+  top: 27px;
+  left: calc(var(--main-x) - var(--lane-x) - 22px - 7px);
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.git-card {
+  padding: 16px 20px;
+}
+
+/* A commit made straight on main: a small dot on the line, and a compact row. */
+.git-commit {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.git-commit-dot {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--main-x) - var(--lane-x) - 22px - 4px);
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+}
+
+.git-card-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.git-branch-name {
+  margin: 0;
+  font-size: 1.3rem;
+  overflow-wrap: anywhere;
+}
+
+.git-branch-name code {
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+.git-commits {
+  margin-top: 12px;
+}
+
+.git-commits summary {
+  cursor: pointer;
+  font-style: italic;
+  color: var(--accent);
+}
+
+.git-commits .commit-list li {
+  padding: 12px 0;
+}
+
 .page-intro {
   max-width: var(--measure);
   margin: 0 auto 44px;
