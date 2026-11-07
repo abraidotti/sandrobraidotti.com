@@ -85,7 +85,8 @@ test('frames are 32×32 and the second one breathes', () => {
 test('every sprite can blink, and glowing pixels can flicker', () => {
   for (const seed of MANY.slice(0, 80)) {
     const p = spriteParams(seed);
-    if (p.archetype === 'forvalaka') continue; // cats stare
+    // Cats stare, and inside a pointed cowl there are only embers.
+    if (p.archetype === 'forvalaka' || p.parts.headgear === 'pointed cowl') continue;
     const svg = renderSprite(p);
     // Both frames close both eyes.
     assert.equal((svg.match(/<g class="lids"><rect/g) ?? []).length, 2, `${seed}: no eyelids`);

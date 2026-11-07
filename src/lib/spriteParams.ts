@@ -97,6 +97,35 @@ export const ARCHETYPES: Archetype[] = [
     },
   },
   {
+    id: 'cultist',
+    weight: 2,
+    palette: { cloth: ['oxblood', 'soot', 'ash'] },
+    parts: {
+      face: ['gaunt', 'long-haired', 'bearded'],
+      expression: EXPRESSIONS,
+      mark: [null, null, null, 'war paint', 'scar'],
+      headgear: ['pointed cowl', 'pointed cowl', 'hood', null],
+      torso: ['cult robe'],
+      legs: ['robe skirt'],
+      cloak: [null, null, 'ragged cloak'],
+      weapon: ['sickle'],
+    },
+  },
+  {
+    id: 'scout',
+    weight: 2,
+    parts: {
+      face: ['gaunt', 'long-haired', 'bearded'],
+      expression: EXPRESSIONS,
+      mark: MARKS,
+      headgear: ['hood', 'hood', 'feathered cap', 'feathered cap', null],
+      torso: ['leather jerkin'],
+      legs: ['trousers'],
+      cloak: ['ragged cloak', 'ragged cloak', null],
+      weapon: ['shortbow'],
+    },
+  },
+  {
     // Sorcerers bound to a dark master: masked, always corrupted, robed in dark colours.
     id: 'taken',
     weight: 1,

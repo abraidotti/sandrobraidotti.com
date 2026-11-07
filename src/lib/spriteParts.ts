@@ -310,6 +310,47 @@ function forvalaka(id: string, coat: Coat): Part {
   };
 }
 
+/** A sickle held low, the blade curving up and forward from the fist. */
+const sickleLow: Run[] = [
+  [10, 8, 'r'], [11, 7, 'qr'], [12, 6, 'pq'], [13, 6, 'p'], [14, 6, 'pq'], [15, 7, 'pq'], [16, 8, 'q'],
+  ...fist, [19, 8, 'tu'], [20, 8, 'tu'], [21, 8, 'u'],
+];
+/** A ritual circle glowing on the ground; `bright` adds more of it. */
+const ritualCircle = (bright: boolean): Run[] => [
+  [28, 4, 'v.v.v'], [28, 20, 'v.v.v'], [29, 2, 'v'], [29, 26, 'v'], [30, 5, 'v.v.v.v.v.v.v.v.v.v'],
+  ...(bright ? ([[27, 8, '~.~'], [27, 18, '~.~'], [29, 3, '~'], [29, 25, '~'], [26, 3, '~'], [25, 24, '~']] as Run[]) : []),
+];
+
+/** A shortbow held upright at the side, string straight, arrows in a quiver on the back. */
+const bowIdle: Run[] = [
+  [10, 8, 'u'], [11, 7, 't'], [12, 6, 't'], [13, 6, 's'], [14, 5, 's'], [15, 5, 's'], [16, 5, 's'],
+  [19, 5, 's'], [20, 5, 's'], [21, 6, 't'], [22, 6, 't'], [23, 7, 't'], [24, 8, 'u'],
+  ...[11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23].map((y): Run => [y, 8, 'x']),
+  [17, 5, 's'], [18, 5, 's'],
+  ...fist,
+];
+const arrowQuiver: Run[] = [[10, 20, 'xy'], [11, 21, 'xy'], [12, 20, 'nn'], [13, 21, 'mn'], [14, 21, 'mn'], [15, 22, 'mo'], [16, 22, 'no'], [17, 23, 'o']];
+/** Both arms raised to shoot: the bow out front at `bowX`, the drawing hand at the cheek (or flung back). */
+function bowRaised({ drawn, bowX = 4, handX = 14 }: { drawn: boolean; bowX?: number; handX?: number }): Run[] {
+  const b = bowX;
+  const string: Run[] = drawn
+    ? [[4, b + 3, 'x'], [5, b + 4, 'x'], [6, b + 6, 'x'], [7, b + 7, 'xx'], [8, b + 9, 'x'], [10, b + 9, 'x'], [11, b + 7, 'xx'], [12, b + 6, 'x'], [13, b + 4, 'x'], [14, b + 3, 'x']]
+    : [4, 5, 6, 7, 8, 10, 11, 12, 13, 14].map((y): Run => [y, b + 2, 'x']);
+  return [
+    // the resting front and back arms out of the way
+    [16, 9, '___'], [17, 9, '___'], [18, 9, '___'],
+    [15, 21, '__'], [16, 21, '__'], [17, 21, '__'], [18, 21, '__'], [19, 21, '__'], [20, 20, '___'],
+    // front arm reaching forward to the bow; back arm bent up to the drawing hand
+    [11, b + 3, 'ab'], [12, b + 5, 'gh'], [13, b + 6, 'ghh'], [14, b + 7, 'ghhh'],
+    [12, 16, 'hh'], [13, 17, 'hhh'], [14, 19, 'hh'],
+    [9, handX, 'ab'], [10, handX, 'bc'], [11, handX + 1, 'h'],
+    // the bow
+    [3, b + 2, 'u'], [4, b + 1, 't'], [5, b, 't'], [6, b, 's'], [7, b - 1, 's'], [8, b - 1, 's'], [9, b - 1, 's'], [10, b - 1, 's'],
+    [11, b - 1, 's'], [12, b, 's'], [13, b, 't'], [14, b + 1, 't'], [15, b + 2, 'u'],
+    ...string,
+  ];
+}
+
 /** A quiver of bolts at the hip, fletchings showing. */
 const quiver: Run[] = [[17, 21, 'x'], [18, 20, 'xy'], [19, 20, 'nn'], [20, 20, 'mn'], [21, 20, 'mn'], [22, 20, 'mo'], [23, 20, 'oo']];
 
@@ -573,6 +614,41 @@ export const PARTS: Part[] = [
         [11, 12, 'xwxxwy'],
         [12, 13, 'wxxw'],
         [13, 14, 'xy'],
+      ],
+    },
+  },
+
+  {
+    id: 'pointed cowl',
+    slot: 'headgear',
+    // A tall pointed hood, the face inside lost in darkness but for two ember eyes.
+    layers: {
+      main: [
+        [1, 15, 'g'], [2, 14, 'ghi'],
+        [3, 14, 'ghhhi'],
+        [4, 13, 'ghhhhhi'],
+        [5, 12, 'ghhhhhhii'],
+        [6, 11, 'ghhhhhhhhii'],
+        [7, 11, 'ghwwwwwhiii'],
+        [8, 11, 'gwvwwvwhiii'],
+        [9, 11, 'gwwwwwwhiii'],
+        [10, 11, 'ghwwwwwhii'],
+        [11, 12, 'gwwwwwhhii'],
+        [12, 12, 'ghhwwhhhii'],
+        [13, 12, 'ghhhhhhhii'],
+      ],
+    },
+  },
+  {
+    id: 'feathered cap',
+    slot: 'headgear',
+    // A close leather cap with a band and a feather swept back.
+    layers: {
+      main: [
+        [1, 20, 'k'], [2, 19, 'jk'], [3, 18, 'jk'],
+        [4, 13, 'mmnnn'],
+        [5, 12, 'mnnnnno'],
+        [6, 12, 'kkkkkkkl'],
       ],
     },
   },
@@ -1053,6 +1129,70 @@ export const PARTS: Part[] = [
   forvalaka('clouded forvalaka', CLOUDED),
   forvalaka('king forvalaka', KING),
   {
+    id: 'sickle',
+    slot: 'weapon',
+    layers: { main: sickleLow },
+    action: {
+      verb: 'invoke',
+      frames: [
+        // Raise: the sickle lifted high; a ritual circle kindles on the ground.
+        {
+          ms: 280,
+          runs: [
+            ...raisedSleeve(11, 8, 8),
+            [5, 8, 'r'], [6, 7, 'qr'], [7, 6, 'pq'], [8, 6, 'p'], [9, 6, 'pq'], [10, 7, 'q'],
+            [11, 8, 'ab'], [12, 8, 'bc'], [13, 8, 'tu'], [14, 8, 'tu'],
+            ...ritualCircle(false),
+          ],
+        },
+        // Chant: the circle flares, smoke curls up out of it.
+        {
+          ms: 240,
+          runs: [
+            ...raisedSleeve(11, 8, 8),
+            [5, 8, 'r'], [6, 7, 'qr'], [7, 6, 'pq'], [8, 6, 'p'], [9, 6, 'pq'], [10, 7, 'q'],
+            [11, 8, 'ab'], [12, 8, 'bc'], [13, 8, 'tu'], [14, 8, 'tu'],
+            ...ritualCircle(true),
+            [24, 5, '~'], [22, 6, '~'], [23, 24, '~'], [21, 23, '~'], [20, 5, '~'],
+          ],
+        },
+        // Slash: brought down through a pale arc, the body lunging behind it.
+        {
+          ms: 110,
+          lean: 2,
+          runs: [
+            [16, 7, '_____'], [17, 7, '_____'], [18, 7, '_____'],
+            [4, 7, '~~'], [5, 5, '~~'], [6, 4, '~'], [7, 3, '~'], [8, 2, '~'], [9, 2, '~'], [10, 2, '~'], [11, 2, '~'], [12, 2, '~'],
+            [16, 8, 'ggh'], [17, 9, 'gh'],
+            [13, 3, 'pq'], [14, 2, 'p'], [15, 2, 'pq'], [16, 3, 'qr'], [17, 5, 'r'],
+            [18, 6, 'ab'], [19, 6, 'bc'], [20, 7, 'tu'],
+            ...ritualCircle(false),
+          ],
+        },
+        // Settle: back at rest, the circle guttering out.
+        { ms: 260, runs: [...sickleLow, [30, 7, 'v...v...v'], [28, 22, 'v']] },
+      ],
+    },
+  },
+  {
+    id: 'shortbow',
+    slot: 'weapon',
+    layers: { back: arrowQuiver, main: bowIdle },
+    action: {
+      verb: 'loose',
+      frames: [
+        // Draw: bow up, an arrow nocked, the string pulled back to the cheek.
+        { ms: 320, runs: [...bowRaised({ drawn: true }), [9, 1, 'ppyyyyyyyyyyy']] },
+        // Loose: the string snaps, the drawing hand flies back, the arrow is gone in a streak.
+        { ms: 90, lean: -1, runs: [...bowRaised({ drawn: false, handX: 17 }), [9, 1, '~~~~'], [8, 2, '~'], [10, 2, '~']] },
+        // Follow-through: held there while the string hums.
+        { ms: 220, runs: [...bowRaised({ drawn: false, handX: 16 }), [7, 7, 'x'], [11, 7, 'x']] },
+        // Lower: back to rest.
+        { ms: 220, runs: bowIdle },
+      ],
+    },
+  },
+  {
     id: 'staff',
     slot: 'weapon',
     layers: { main: staff(17) },
@@ -1167,6 +1307,9 @@ PARTS.push(recut('trousers', 'greaves', recolour({ j: 'p', k: 'q', l: 'r' })));
 // The gravedigger's oilskin coat and its long skirts: the robe's cut, in leather.
 const oilskin = recolour({ g: 'm', h: 'n', i: 'o' });
 PARTS.push(recut('robe', 'oilskin coat', oilskin), recut('robe skirt', 'coat skirt', oilskin));
+
+// The cultist's robe: the robe's cut, with a glowing eye sigil stitched on the chest.
+PARTS.push(recut('robe', 'cult robe', (ch) => ch, () => [[16, 15, 'kkk'], [17, 14, 'kvvk'], [18, 15, 'kkk']]));
 
 /** A colour ramp: light, base, shadow. */
 export type Ramp = [string, string, string];
