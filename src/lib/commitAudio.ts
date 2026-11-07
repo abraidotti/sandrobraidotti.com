@@ -126,9 +126,44 @@ export function scheduleSong(ctx: BaseAudioContext, params: SongParams, start: n
   voiceBus.type = 'lowpass';
   voiceBus.frequency.value = voice.cutoff;
   voiceBus.Q.value = 0.7;
-  voiceBus.connect(master);
-  voiceBus.connect(reverbSend);
-  voiceBus.connect(delaySend);
+
+  // Sidechain pump: the chords duck on every kick and swell back before the next.
+  const pump = ctx.createGain();
+  pump.gain.setValueAtTime(1, start);
+  params.drums.kick.forEach((on, i) => {
+    if (!on) return;
+    const t = start + i * dur;
+    pump.gain.setTargetAtTime(1 - params.pump, t, 0.004);
+    pump.gain.setTargetAtTime(1, t + 0.03, dur * 0.35);
+  });
+  voiceBus.connect(pump);
+
+  // Phaser: allpass stages swept by a slow LFO, summed with the dry signal so notches drift through the chords.
+  const phased = ctx.createGain();
+  phased.gain.value = 0.6;
+  const wet = ctx.createGain();
+  wet.gain.value = params.phaser.depth;
+  const sweep = ctx.createOscillator();
+  sweep.frequency.value = params.phaser.rate;
+  let stage: AudioNode = pump;
+  for (const mult of [1, 1.5, 2.3, 3.4, 5]) {
+    const allpass = ctx.createBiquadFilter();
+    allpass.type = 'allpass';
+    allpass.frequency.value = 400 * mult;
+    allpass.Q.value = 0.5;
+    const range = ctx.createGain();
+    range.gain.value = 300 * mult;
+    sweep.connect(range).connect(allpass.frequency);
+    stage.connect(allpass);
+    stage = allpass;
+  }
+  stage.connect(wet).connect(phased);
+  pump.connect(phased);
+  sweep.start(start);
+  sweep.stop(start + songLength(params));
+  phased.connect(master);
+  phased.connect(reverbSend);
+  phased.connect(delaySend);
 
   // Tape wobble: one slow LFO bending every oscillator's pitch together.
   const lfo = ctx.createOscillator();

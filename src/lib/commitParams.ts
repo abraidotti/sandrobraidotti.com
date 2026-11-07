@@ -1,5 +1,5 @@
 // Turns a commit hash (or any string) into a deterministic little song:
-// an Orchid-style chord progression, mostly lush and dreamy, sometimes unsettling.
+// a looping chord progression, mostly lush and dreamy, sometimes unsettling.
 // The same params drive both the SVG "score" and the Web Audio playback,
 // so what you see is literally what you hear.
 
@@ -54,6 +54,12 @@ export interface SongParams {
   drums: { groove: Groove; kick: boolean[]; snare: boolean[]; hat: number[] };
   /** Bar 3 opens with a lone kick and the chord comes in on the third eighth. */
   lateEntry: boolean;
+  /** Bars (0-3) with an arpeggio over the chords: every bar for arp songs, two otherwise. */
+  arpBars: number[];
+  /** Phaser swirl on the chords: sweep rate in Hz and depth 0-1. */
+  phaser: { rate: number; depth: number };
+  /** How far the chords duck on each kick (sidechain pump), 0-1. */
+  pump: number;
   /** Seeded background decoration for the art. */
   backdrop: { x: number; y: number; r: number; color: number; arcadeY: number };
 }
@@ -71,15 +77,34 @@ const MODES: Record<string, number[]> = {
   dorian: [0, 2, 3, 5, 7, 9, 10],
   aeolian: [0, 2, 3, 5, 7, 8, 10],
   phrygian: [0, 1, 3, 5, 7, 8, 10],
+  // Harmonic minor: only borrowed from, for its major V.
+  harmonic: [0, 2, 3, 5, 7, 8, 11],
 };
-const MODE_WEIGHTS: [string, number][] = [
-  ['aeolian', 3], ['dorian', 3], ['lydian', 2], ['ionian', 2], ['mixolydian', 2], ['phrygian', 1],
-];
 
-// Scale-degree progressions (0 = tonic) that loop nicely.
-const TEMPLATES = [
-  [0, 5, 3, 4], [0, 3, 5, 4], [0, 2, 3, 4], [5, 3, 0, 4],
-  [0, 3, 0, 4], [0, 4, 5, 3], [0, 6, 5, 3], [0, 5, 1, 4],
+/** A scale degree (0 = tonic) of the song's mode, or [degree, mode] to borrow a chord on the same tonic. */
+type Step = number | [number, string];
+
+interface Progression {
+  mode: string;
+  /** Four chords play twice; eight play once. */
+  steps: Step[];
+  weight: number;
+}
+
+// Classic progressions that loop well, leaning dark and cinematic.
+const PROGRESSIONS: Progression[] = [
+  { mode: 'aeolian', steps: [0, 5, 2, 6], weight: 3 }, // i–VI–III–VII
+  { mode: 'aeolian', steps: [0, 6, 5, [4, 'harmonic']], weight: 3 }, // Andalusian: i–VII–VI–V
+  { mode: 'aeolian', steps: [0, 5, 3, [4, 'harmonic']], weight: 3 }, // i–VI–iv–V
+  { mode: 'aeolian', steps: [3, 6, 2, 5, 1, [4, 'harmonic'], 0, 0], weight: 3 }, // minor circle of fifths: iv–VII–III–VI–ii°–V–i
+  { mode: 'aeolian', steps: [0, 3, 6, 2], weight: 2 }, // minor circle: i–iv–VII–III
+  { mode: 'aeolian', steps: [3, 5, 6, 0], weight: 2 }, // rising: iv–VI–VII–i
+  { mode: 'dorian', steps: [0, 2, 6, 3], weight: 2 }, // i–III–VII–IV
+  { mode: 'phrygian', steps: [0, 1, 0, 6], weight: 2 }, // i–♭II–i–♭vii
+  { mode: 'phrygian', steps: [0, 1, 6, 5], weight: 1 }, // i–♭II–♭vii–♭VI
+  { mode: 'dorian', steps: [0, 3, 0, 3], weight: 1 }, // i–IV vamp
+  { mode: 'ionian', steps: [0, 5, 3, [3, 'aeolian']], weight: 1 }, // bittersweet: I–vi–IV–iv
+  { mode: 'lydian', steps: [0, 1, 0, 1], weight: 1 }, // floating: I–II
 ];
 
 // One bar of each groove, in eighth notes. Hats are velocities (0 = silent).
@@ -104,7 +129,7 @@ const CHORD_NAMES: Record<string, string> = {
   '0,4,7': '', '0,3,7': 'm', '0,3,6': 'dim', '0,4,8': 'aug',
   '0,4,7,11': 'maj7', '0,3,7,10': 'm7', '0,4,7,10': '7', '0,3,6,10': 'm7♭5', '0,3,6,9': 'dim7',
   '0,2,4,7,11': 'maj9', '0,2,3,7,10': 'm9', '0,2,4,7,10': '9', '0,2,3,6,10': 'm9♭5',
-  '0,1,3,7,10': 'm7♭9', '0,1,3,6,10': 'm7♭5♭9', '0,2,4,6,11': 'maj9♯11', '0,2,4,7': 'add9', '0,2,3,7': 'm(add9)',
+  '0,1,3,7,10': 'm7♭9', '0,1,4,7,10': '7♭9', '0,1,3,6,10': 'm7♭5♭9', '0,2,4,6,11': 'maj9♯11', '0,2,4,7': 'add9', '0,2,3,7': 'm(add9)',
   '0,2,7': 'sus2', '0,5,7': 'sus4', '0,2,7,11': 'maj7sus2', '0,2,7,10': '7sus2', '0,5,7,10': '7sus4',
   '0,5,7,11': 'maj7sus4', '0,2,5,7,10': '9sus4', '0,2,5,7,11': 'maj9sus4',
 };
@@ -167,17 +192,35 @@ function diatonic(scale: number[], degree: number, size: number): number[] {
   return tones.sort((a, b) => a - b);
 }
 
-/** Pick the inversion/octave of a chord closest to the previous voicing (smooth voice leading). */
+/** At most four voices, so the chord stays clear under the bass and arpeggio: drop the fifth, then the root (the bass has it). */
+function thin(intervals: number[]): number[] {
+  if (intervals.length > 4) intervals = intervals.filter((iv) => iv !== 7);
+  if (intervals.length > 4) intervals = intervals.filter((iv) => iv !== 0);
+  return intervals;
+}
+
+/** Every way to place each chord tone in one of three octaves. */
+function spreads(intervals: number[]): number[][] {
+  if (!intervals.length) return [[]];
+  const rest = spreads(intervals.slice(1));
+  return [0, 12, 24].flatMap((o) => rest.map((r) => [intervals[0] + o, ...r]));
+}
+
+/** Pick an open voicing (within an octave and a half) closest to the previous one (smooth voice leading). */
 function voice(rootPc: number, intervals: number[], prev: number[] | undefined): number[] {
   let best: number[] = [];
   let bestCost = Infinity;
   for (let root = 48 + rootPc - 12; root <= 64; root += 12) {
-    for (let inv = 0; inv < intervals.length; inv++) {
-      const notes = intervals.map((iv, j) => root + iv + (j < inv ? 12 : 0)).sort((a, b) => a - b);
-      if (notes[0] < 50 || notes[notes.length - 1] > PITCH_MAX - 2) continue;
-      const cost = prev
+    for (const spread of spreads(intervals)) {
+      const notes = spread.map((iv) => root + iv).sort((a, b) => a - b);
+      const top = notes[notes.length - 1];
+      if (notes[0] < 50 || top > PITCH_MAX - 2 || top - notes[0] > 19 || new Set(notes).size < notes.length) continue;
+      // Seconds smear the chord, and close intervals low down sound muddy.
+      const seconds = notes.filter((n, j) => j > 0 && n - notes[j - 1] <= 2).length;
+      const mud = notes.filter((n, j) => j > 0 && n < 62 && n - notes[j - 1] < 3).length;
+      const cost = seconds * 6 + mud * 8 + (prev
         ? notes.reduce((sum, n) => sum + Math.min(...prev.map((p) => Math.abs(p - n))), 0)
-        : Math.abs(notes[0] - 55);
+        : Math.abs(notes[0] - 55));
       if (cost < bestCost) {
         bestCost = cost;
         best = notes;
@@ -198,71 +241,63 @@ export function commitParams(hash: string): SongParams {
   };
 
   const key = int(0, 11);
-  const modeName = weighted(MODE_WEIGHTS);
+  const prog = weighted(PROGRESSIONS.map((p): [Progression, number] => [p, p.weight]));
+  const modeName = prog.mode;
   const scale = MODES[modeName];
   const tempo = int(76, 112);
   const timbre = pick<Timbre>(['velvet', 'glass', 'hollow', 'choir']);
-  const perform = weighted<Perform>([['pad', 3], ['strum', 3], ['arp', 3], ['pulse', 1]]);
+  const perform = weighted<Perform>([['pad', 3], ['strum', 3], ['arp', 1], ['pulse', 1]]);
   // Most songs are pure dream; some carry a little dread.
   const unease = rand() < 0.6 ? 0 : 0.25 + rand() * 0.55;
   const wobble = { depth: 4 + rand() * 8 + unease * 18, rate: 0.25 + rand() * 0.9 };
 
-  // A–A′ form: the template, then a variation with a new cadence.
-  const template = pick(TEMPLATES);
-  const degrees = [...template, ...template];
-  degrees[7] = pick([4, 3, 5, 6, 1].filter((d) => d !== degrees[6]));
+  // Each chord of the progression is spelled once, so a four-chord loop repeats exactly.
+  const spelled = prog.steps.map((step) => {
+    const [degree, from] = typeof step === 'number' ? [step, scale] : [step[0], MODES[step[1]]];
+    const rootPc = mod12(key + from[degree]);
+    let intervals = diatonic(from, degree, rand() < 0.4 ? 5 : 4);
+    // A diatonic ♭9 is a dark colour: keep it only for songs with some unease.
+    if (unease === 0) intervals = intervals.filter((iv) => iv !== 13);
+    // Lush sus colour, only where the fifth is perfect. The home chord keeps its quality, and so do
+    // borrowed chords: it's why they're borrowed.
+    if (rand() < 0.15 && typeof step === 'number' && degree !== 0 && intervals.includes(7) && !intervals.includes(13)) {
+      const sus = rand() < 0.5 ? 2 : 5;
+      intervals = intervals.map((iv) => (iv === 3 || iv === 4 ? sus : iv)).sort((a, b) => a - b);
+    }
+    return { step, rootPc, intervals, name: nameFor(rootPc, intervals), family: familyFor(intervals), color: int(1, 5), drift: (rand() - 0.5) * 6 };
+  });
 
   const chords: Chord[] = [];
-  let prevNotes: number[] | undefined;
-  let prevRootPc = key;
-  degrees.forEach((degree, i) => {
-    let rootPc: number;
-    let intervals: number[];
-    let name: string;
-    let family: Family;
-    let drift = (rand() - 0.5) * 6;
-
-    if (i > 0 && rand() < unease * 0.5) {
-      // Unsettling substitution: chromatic root, out-of-key colour, a little out of tune.
+  let substituted = false;
+  for (let i = 0; i < STEPS / STEPS_PER_CHORD; i++) {
+    const s = spelled[i % spelled.length];
+    const prev = chords[i - 1];
+    const at = { step: i * STEPS_PER_CHORD, length: STEPS_PER_CHORD };
+    // Uneasy songs may twist one chord in the second half, once the loop has been heard,
+    // but never the home chord or a borrowed one. Chromatic root, out-of-key colour, a little out of tune.
+    if (i >= 4 && !substituted && typeof s.step === 'number' && s.step !== 0 && rand() < unease * 0.4) {
+      substituted = true;
       const [quality, ivs] = pick(STRANGE);
-      rootPc = mod12(prevRootPc + pick([1, 3, 4, 6, 8, 9]));
-      intervals = ivs;
-      name = NOTE_NAMES[rootPc] + quality;
-      family = 'strange';
-      drift += (rand() - 0.5) * 50 * unease;
-    } else {
-      rootPc = mod12(key + scale[degree]);
-      intervals = diatonic(scale, degree, rand() < 0.4 ? 5 : 4);
-      // A diatonic ♭9 is a dark colour: keep it only for songs with some unease.
-      if (unease === 0) intervals = intervals.filter((iv) => iv !== 13);
-      // Lush sus colour, only where the fifth is perfect.
-      if (rand() < 0.22 && intervals.includes(7) && !intervals.includes(13)) {
-        const sus = rand() < 0.5 ? 2 : 5;
-        intervals = intervals.map((iv) => (iv === 3 || iv === 4 ? sus : iv)).sort((a, b) => a - b);
-      }
-      name = nameFor(rootPc, intervals);
-      family = familyFor(intervals);
+      const rootPc = mod12(prev.bass + pick([1, 3, 4, 6, 8, 9]));
+      const drift = s.drift + (rand() - 0.5) * 50 * unease;
+      chords.push({ ...at, name: NOTE_NAMES[rootPc] + quality, family: 'strange', notes: voice(rootPc, thin(ivs), prev.notes), bass: 36 + rootPc, color: int(1, 5), drift });
+      continue;
     }
-
-    const notes = voice(rootPc, intervals, prevNotes);
-    chords.push({
-      step: i * STEPS_PER_CHORD,
-      length: STEPS_PER_CHORD,
-      name,
-      family,
-      notes,
-      bass: 36 + rootPc,
-      color: int(1, 5),
-      drift,
-    });
-    prevNotes = notes;
-    prevRootPc = rootPc;
-  });
+    // A repeated chord reuses its first voicing, unless it follows the strange one.
+    const echo = i >= spelled.length && prev.family !== 'strange' ? chords[i - spelled.length] : undefined;
+    const notes = echo ? echo.notes : voice(s.rootPc, thin(s.intervals), prev?.notes);
+    chords.push({ ...at, name: s.name, family: s.family, notes, bass: 36 + s.rootPc, color: s.color, drift: s.drift });
+  }
 
   const events: NoteEvent[] = [];
   const strumGap = 0.03 + rand() * 0.06;
   const arpPattern = pick(['up', 'down', 'updown', 'random'] as const);
   const pulse = Array.from({ length: STEPS_PER_CHORD }, (_, i) => i === 0 || rand() < 0.55);
+  const arpIndex = (s: number, n: number) =>
+    arpPattern === 'up' ? s % n
+    : arpPattern === 'down' ? n - 1 - (s % n)
+    : arpPattern === 'updown' ? [0, 1, 2, 1][s] % n
+    : int(0, n - 1);
 
   chords.forEach((chord, c) => {
     const base = { chord: c, family: chord.family, color: chord.color };
@@ -277,12 +312,7 @@ export function commitParams(hash: string): SongParams {
       // Soft bed of the chord underneath the arpeggio.
       chord.notes.forEach((pitch) => events.push({ ...base, step: chord.step, length: chord.length, pitch, delay: 0, velocity: 0.3 }));
       for (let s = 0; s < chord.length; s++) {
-        const idx =
-          arpPattern === 'up' ? s % n
-          : arpPattern === 'down' ? n - 1 - (s % n)
-          : arpPattern === 'updown' ? [0, 1, 2, 1][s] % n
-          : int(0, n - 1);
-        events.push({ ...base, step: chord.step + s, length: 2, pitch: chord.notes[idx] + 12, delay: 0, velocity: 0.75 });
+        events.push({ ...base, step: chord.step + s, length: 2, pitch: chord.notes[arpIndex(s, n)] + 12, delay: 0, velocity: 0.75 });
       }
     } else {
       pulse.forEach((on, s) => {
@@ -349,8 +379,25 @@ export function commitParams(hash: string): SongParams {
     }
   }
 
+  // Songs that aren't arpeggiated throughout get a soft arpeggio over the chords in two bars,
+  // one in each half. Drawn after the rest so it doesn't change them.
+  const bars = STEPS / BAR;
+  const arpBars = perform === 'arp' ? [...Array(bars).keys()] : [int(0, bars / 2 - 1), int(bars / 2, bars - 1)];
+  if (perform !== 'arp') {
+    chords.forEach((chord, c) => {
+      if (!arpBars.includes(Math.floor(chord.step / BAR))) return;
+      for (let s = 0; s < chord.length; s++) {
+        const pitch = chord.notes[arpIndex(s, chord.notes.length)] + 12;
+        events.push({ chord: c, family: chord.family, color: chord.color, step: chord.step + s, length: 2, pitch, delay: 0, velocity: 0.55 });
+      }
+    });
+  }
 
-  return { hash, key, modeName, tempo, timbre, perform, unease, wobble, chords, events, drums, lateEntry, backdrop };
+  // Production colour, drawn last so the notes are unchanged.
+  const phaser = { rate: 0.08 + rand() * 0.27, depth: 0.4 + rand() * 0.6 };
+  const pump = 0.35 + rand() * 0.3;
+
+  return { hash, key, modeName, tempo, timbre, perform, unease, wobble, chords, events, drums, lateEntry, arpBars, phaser, pump, backdrop };
 }
 
 /** Seconds per step (steps are eighth notes). */
