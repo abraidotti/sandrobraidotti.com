@@ -3,7 +3,7 @@
 // generated name. Pure data, so it works at build time and in the browser.
 
 import { dice } from './seed.ts';
-import { RAMPS, type Material, type Ramp, type Slot } from './spriteParts.ts';
+import { BUILDS, RAMPS, partById, type Build, type Material, type Ramp, type Slot } from './spriteParts.ts';
 import { generatedName } from './spriteNames.ts';
 
 export interface Archetype {
@@ -20,7 +20,7 @@ export const ARCHETYPES: Archetype[] = [
     id: 'sellsword',
     weight: 3,
     parts: {
-      face: ['gaunt', 'bearded'],
+      face: ['gaunt', 'long-haired', 'bearded'],
       expression: EXPRESSIONS,
       headgear: [null, 'kettle hat', 'kettle hat', 'hood'],
       torso: ['gambeson'],
@@ -33,7 +33,7 @@ export const ARCHETYPES: Archetype[] = [
     id: 'hedge-wizard',
     weight: 2,
     parts: {
-      face: ['gaunt', 'bearded'],
+      face: ['gaunt', 'long-haired', 'bearded'],
       expression: EXPRESSIONS,
       headgear: ['hood', 'hood', null],
       torso: ['robe'],
@@ -50,6 +50,7 @@ export interface SpriteParams {
   name: string;
   /** True when the name was typed rather than generated. */
   typed: boolean;
+  build: Build;
   archetype: string;
   parts: Partial<Record<Slot, string>>;
   palette: Record<Material, Ramp>;
@@ -73,10 +74,12 @@ export function spriteParams(input: string, typed = false): SpriteParams {
   const seed = input.trim().toLowerCase();
   const { rand, pick, weighted } = dice(seed);
 
+  const build = pick(BUILDS);
   const archetype = weighted(ARCHETYPES.map((a): [Archetype, number] => [a, a.weight]));
   const parts: Partial<Record<Slot, string>> = {};
   for (const slot of SLOTS) {
-    const id = pick(archetype.parts[slot]);
+    const options = archetype.parts[slot].filter((id) => !id || (partById(id).builds ?? BUILDS).includes(build));
+    const id = pick(options);
     if (id) parts[slot] = id;
   }
 
@@ -105,7 +108,7 @@ export function spriteParams(input: string, typed = false): SpriteParams {
   }
 
   const name = typed ? input.trim() : generatedName(seed, archetype.id, parts, corrupted);
-  return { seed, name, typed, archetype: archetype.id, parts, palette, corrupted };
+  return { seed, name, typed, build, archetype: archetype.id, parts, palette, corrupted };
 }
 
 /** Long typed names are shortened for display; the full text still seeds the sprite. */

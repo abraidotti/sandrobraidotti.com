@@ -45,7 +45,7 @@ for (let i = 0; i < count; i++) {
   blit(a, ox, oy);
   blit(b, ox + (SIZE + GAP) * scale, oy);
   const parts = Object.values(params.parts).join(', ');
-  console.log(`${i}: ${params.name} · ${params.corrupted ? 'corrupted ' : ''}${params.archetype} · ${parts}`);
+  console.log(`${i}: ${params.name} · ${params.build} ${params.corrupted ? 'corrupted ' : ''}${params.archetype} · ${parts}`);
 }
 
 // Minimal PNG encoder: 8-bit RGB, one IDAT chunk.

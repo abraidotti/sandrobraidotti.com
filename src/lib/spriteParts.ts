@@ -17,11 +17,24 @@ export type Slot = 'cloak' | 'weapon' | 'legs' | 'torso' | 'face' | 'expression'
 export type Layer = 'back' | 'main';
 export type Run = [y: number, x: number, pixels: string];
 
+/** Body types. Torsos, legs and jaws are drawn per build; heads, hands and gear line up across all of them. */
+export type Build = 'masculine' | 'feminine' | 'androgynous';
+export const BUILDS: Build[] = ['masculine', 'feminine', 'androgynous'];
+
+type Layers = Partial<Record<Layer, Run[]>>;
+
 export interface Part {
   id: string;
   slot: Slot;
-  layers: Partial<Record<Layer, Run[]>>;
+  /** Drawn for the masculine build, and for any build without its own variant. */
+  layers: Layers;
+  variants?: Partial<Record<Build, Layers>>;
+  /** Only these builds can wear it (default: all). */
+  builds?: Build[];
 }
+
+export const partLayer = (part: Part, build: Build, layer: Layer): Run[] =>
+  (part.variants?.[build] ?? part.layers)[layer] ?? [];
 
 /** Bottom to top. */
 export const DRAW_ORDER: [Slot, Layer][] = [
@@ -59,45 +72,61 @@ const fist: Run[] = [
   [18, 8, 'bc'],
 ];
 
+// Faces share a head (rows 4-9) and differ by build in the jaw (rows 10-13). The feminine and
+// androgynous heads have a softer profile (no protruding nose); the feminine one adds a lash at the
+// near eye's outer corner.
+const head: Run[] = [
+  [4, 14, 'eeeee'],
+  [5, 13, 'deeeeef'],
+  [6, 12, 'ddeeeeeff'],
+  [7, 12, 'aabbbbeef'],
+  [8, 12, 'abbbbbcef'],
+  [9, 11, 'babbbbbcef'],
+];
+const heads: Record<Build, Run[]> = {
+  masculine: head,
+  feminine: [...head.slice(0, 4), [8, 12, 'wbbbbbcef'], [9, 12, 'abbbbbcef']],
+  androgynous: [...head.slice(0, 5), [9, 12, 'abbbbbcef']],
+};
+const jaws: Record<Build, Run[]> = {
+  masculine: [[10, 12, 'abbbbcbf'], [11, 12, 'abbbbbc'], [12, 13, 'bbbcc'], [13, 14, 'ccc']],
+  feminine: [[10, 12, 'abbbbbbf'], [11, 12, 'abbbbc'], [12, 13, 'bbcc'], [13, 14, 'cc']],
+  androgynous: [[10, 12, 'abbbbcbf'], [11, 12, 'abbbbc'], [12, 13, 'bbcc'], [13, 14, 'cc']],
+};
+const slimLegs: Run[] = [
+  [23, 12, 'jkl'], [23, 16, 'jkl'],
+  [24, 12, 'jkl'], [24, 16, 'jkl'],
+  [25, 12, 'jkl'], [25, 16, 'jkl'],
+  [26, 12, 'mno'], [26, 16, 'mno'],
+  [27, 12, 'mno'], [27, 16, 'mno'],
+  [28, 11, 'mmno'], [28, 15, 'mmno'],
+  [29, 11, 'oooo'], [29, 15, 'oooo'],
+];
+
+const faceFor = (extra: Run[] = []) => ({
+  layers: { main: [...heads.masculine, ...jaws.masculine, ...extra] },
+  variants: {
+    feminine: { main: [...heads.feminine, ...jaws.feminine, ...extra] },
+    androgynous: { main: [...heads.androgynous, ...jaws.androgynous, ...extra] },
+  },
+});
+
 export const PARTS: Part[] = [
   // ---------- faces ----------
   // Faces are bare: the expression slot draws brows (row 7), eyes (row 8: near eye x13-14, far eye
   // x16-17) and the mouth (around row 11, x13-16) on top, so any expression fits any face.
+  { id: 'gaunt', slot: 'face', ...faceFor() },
   {
-    id: 'gaunt',
+    id: 'long-haired',
     slot: 'face',
-    layers: {
-      main: [
-        [4, 14, 'eeeee'],
-        [5, 13, 'deeeeef'],
-        [6, 12, 'ddeeeeeff'],
-        [7, 12, 'aabbbbeef'],
-        [8, 12, 'abbbbbcef'],
-        [9, 11, 'babbbbbcef'],
-        [10, 12, 'abbbbcbf'],
-        [11, 12, 'abbbbbc'],
-        [12, 13, 'bbbcc'],
-        [13, 14, 'ccc'],
-      ],
-    },
+    // Hair falls behind the jaw and over the back shoulder.
+    ...faceFor([[10, 19, 'ef'], [11, 18, 'eef'], [12, 18, 'eff'], [13, 18, 'eff'], [14, 18, 'ef'], [15, 19, 'f']]),
   },
   {
     id: 'bearded',
     slot: 'face',
-    layers: {
-      main: [
-        [4, 14, 'eeeee'],
-        [5, 13, 'deeeeef'],
-        [6, 12, 'ddeeeeeff'],
-        [7, 12, 'aabbbbeef'],
-        [8, 12, 'abbbbbcef'],
-        [9, 11, 'babbbbbcef'],
-        [10, 12, 'bbeeebcf'],
-        [11, 12, 'deeeeef'],
-        [12, 13, 'eeeef'],
-        [13, 14, 'fef'],
-      ],
-    },
+    builds: ['masculine'],
+    layers: { main: [...head, [10, 12, 'bbeeebcf'], [11, 12, 'deeeeef'], [12, 13, 'eeeef'], [13, 14, 'fef']] },
   },
 
   // ---------- expressions ----------
@@ -191,6 +220,38 @@ export const PARTS: Part[] = [
         [22, 12, 'hhhihhhii'],
       ],
     },
+    variants: {
+      // Narrow shoulders, a cinched waist with the arm hanging free of it, hips flaring below.
+      feminine: {
+        main: [
+          [13, 15, 'bc'],
+          [14, 13, 'ghhhhhi'],
+          [15, 12, 'gghihhihi'],
+          [16, 10, 'gghhihhihhii'],
+          [17, 9, 'gghhhihhihhii'],
+          [18, 9, 'ghihiihhiihii'],
+          [19, 14, 'hihh'], [19, 20, 'ii'],
+          [20, 14, 'mpno'], [20, 20, 'bc'],
+          [21, 12, 'ghhihhii'],
+          [22, 11, 'ghhhihhhii'],
+        ],
+      },
+      // Narrower shoulders, a straight waist.
+      androgynous: {
+        main: [
+          [13, 15, 'bbc'],
+          [14, 12, 'ghhhhhhhi'],
+          [15, 11, 'gghhihhihii'],
+          [16, 10, 'gghhihhihhii'],
+          [17, 9, 'gghhhihhihhii'],
+          [18, 9, 'ghihhihhihhii'],
+          [19, 12, 'hhihhihhii'],
+          [20, 12, 'mnnpnnno'], [20, 20, 'bc'],
+          [21, 12, 'ghhihhii'],
+          [22, 12, 'hhhihhii'],
+        ],
+      },
+    },
   },
   {
     id: 'robe',
@@ -210,6 +271,36 @@ export const PARTS: Part[] = [
         [22, 11, 'ghhhhihhhii'],
       ],
     },
+    variants: {
+      feminine: {
+        main: [
+          [13, 15, 'bc'],
+          [14, 13, 'ghhhhhi'],
+          [15, 12, 'gghhhhhii'],
+          [16, 10, 'gghhhhhhhhii'],
+          [17, 9, 'gghhhhhhhhhii'],
+          [18, 9, 'ghhhhhhhhhhii'],
+          [19, 13, 'hhhhhi'], [19, 20, 'ii'],
+          [20, 14, 'jkkl'], [20, 20, 'bc'],
+          [21, 12, 'ghhhihhii'],
+          [22, 11, 'ghhhhihhhii'],
+        ],
+      },
+      androgynous: {
+        main: [
+          [13, 15, 'bbc'],
+          [14, 12, 'ghhhhhhhi'],
+          [15, 11, 'gghhhhhhhii'],
+          [16, 10, 'gghhhhhhhhii'],
+          [17, 9, 'gghhhhhhhhhii'],
+          [18, 9, 'ghhhhhhhhhhii'],
+          [19, 10, 'ihhhhhhhhhii'],
+          [20, 12, 'jkkkkkkl'], [20, 20, 'bc'],
+          [21, 11, 'ghhhhihhhii'],
+          [22, 11, 'ghhhhihhhii'],
+        ],
+      },
+    },
   },
 
   // ---------- legs ----------
@@ -226,6 +317,10 @@ export const PARTS: Part[] = [
         [28, 11, 'mmnno'], [28, 16, 'mmnno'],
         [29, 11, 'ooooo'], [29, 16, 'ooooo'],
       ],
+    },
+    variants: {
+      feminine: { main: slimLegs },
+      androgynous: { main: slimLegs },
     },
   },
   {

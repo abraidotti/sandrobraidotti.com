@@ -2,7 +2,7 @@
 // adds a dark outline, and makes a second "breathing" frame for the idle animation.
 // Pure string output so it works both at build time (Astro) and in the browser (machines).
 
-import { DEEP, DRAW_ORDER, EYE, GLOW, LEGEND, OUTLINE, SIZE, partById } from './spriteParts.ts';
+import { DEEP, DRAW_ORDER, EYE, GLOW, LEGEND, OUTLINE, SIZE, partById, partLayer } from './spriteParts.ts';
 import { mix, type SpriteParams } from './spriteParams.ts';
 
 /** A frame: SIZE rows of SIZE colours, null where transparent. */
@@ -16,7 +16,7 @@ function charGrid(params: SpriteParams): string[][] {
   for (const [slot, layer] of DRAW_ORDER) {
     const id = params.parts[slot];
     if (!id) continue;
-    for (const [y, x, pixels] of partById(id).layers[layer] ?? []) {
+    for (const [y, x, pixels] of partLayer(partById(id), params.build, layer)) {
       [...pixels].forEach((ch, i) => {
         if (ch !== '.') grid[y][x + i] = ch;
       });

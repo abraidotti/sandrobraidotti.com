@@ -9,7 +9,7 @@ const MANY = Array.from({ length: 500 }, (_, i) => `seed-${i}`);
 
 test('parts use known pixels and keep a 1px margin for the outline', () => {
   for (const part of PARTS) {
-    for (const [layer, runs] of Object.entries(part.layers)) {
+    for (const [layer, runs] of [part.layers, ...Object.values(part.variants ?? {})].flatMap((l) => Object.entries(l))) {
       assert.ok(DRAW_ORDER.some(([s, l]) => s === part.slot && l === layer), `${part.id}: ${layer} layer is never drawn`);
       for (const [y, x, pixels] of runs!) {
         assert.ok(y >= 1 && y <= SIZE - 2, `${part.id}: row ${y} outside the margin`);
@@ -28,6 +28,19 @@ test('archetypes only reference parts in the right slot', () => {
       }
     }
   }
+});
+
+test('every build turns up, and only wears parts drawn for it', () => {
+  const seen = new Set<string>();
+  for (const seed of MANY) {
+    const p = spriteParams(seed);
+    seen.add(p.build);
+    for (const id of Object.values(p.parts)) {
+      const allowed = PARTS.find((part) => part.id === id)!.builds;
+      assert.ok(!allowed || allowed.includes(p.build), `${seed}: ${p.build} wearing ${id}`);
+    }
+  }
+  assert.deepEqual([...seen].sort(), ['androgynous', 'feminine', 'masculine']);
 });
 
 test('same seed always makes the same sprite and name', () => {
