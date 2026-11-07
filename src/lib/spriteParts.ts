@@ -86,21 +86,37 @@ const fist: Run[] = [
   [18, 8, 'bc'],
 ];
 
-/** A staff with the orb on top, gripped at `handY` (and the row below). */
-function staff(handY: number): Run[] {
+/**
+ * A staff with the orb on top, gripped at `handY` (and the row below), running from column `topX`
+ * at the top to `footX` at the bottom (row 29). Upright is 8 and 8; a smaller top and larger foot
+ * tilt it forward.
+ */
+const staffX = (y: number, topX: number, footX: number) => Math.round(topX + ((footX - topX) * (y - 1)) / 28);
+function staff(handY: number, topX = 8, footX = 8): Run[] {
   const shaft: Run[] = [];
   for (let y = 4; y <= 29; y++) {
     if (y === handY || y === handY + 1) continue;
-    shaft.push([y, 8, y < handY ? 'st' : 'tu']);
+    shaft.push([y, staffX(y, topX, footX), y < handY ? 'st' : 'tu']);
   }
-  return [[1, 8, 'vv'], [2, 7, 'svvu'], [3, 7, 'sttu'], ...shaft, [handY, 8, 'ab'], [handY + 1, 8, 'bc']];
+  return [
+    [1, topX, 'vv'], [2, topX - 1, 'svvu'], [3, topX - 1, 'sttu'],
+    ...shaft,
+    [handY, staffX(handY, topX, footX), 'ab'], [handY + 1, staffX(handY + 1, topX, footX), 'bc'],
+  ];
 }
 
-/** The front arm raised to the shoulder: the resting sleeve erased, a lifted sleeve drawn in. */
-const raisedSleeve: Run[] = [
-  [16, 9, '___'], [17, 9, '___'], [18, 9, '___'], [19, 10, '__'],
-  [12, 10, 'g'], [13, 10, 'ghh'], [14, 10, 'ghhh'],
-];
+/** The front arm raised to grip a staff at `handY`: the resting sleeve erased, a sleeve drawn up to the hand. */
+function raisedSleeve(handY: number, topX: number, footX: number): Run[] {
+  const hx = staffX(handY, topX, footX);
+  const sleeve = (y: number, from: number, to: number): Run[] => (from <= to ? [[y, from, 'g' + 'h'.repeat(to - from)]] : []);
+  return [
+    [16, 9, '___'], [17, 9, '___'], [18, 9, '___'], [19, 10, '__'],
+    ...sleeve(12, hx + 2, 10), ...sleeve(13, hx + 3, 12), ...sleeve(14, hx + 4, 13),
+  ];
+}
+
+/** Shift runs sideways, so glow effects follow a tilted staff's orb. */
+const shifted = (runs: Run[], dx: number): Run[] => runs.map(([y, x, px]) => [y, x + dx, px]);
 
 // Faces share a head (rows 4-9) and differ by build in the jaw (rows 10-13). The feminine and
 // androgynous heads have a softer profile (no protruding nose); the feminine one adds a lash at the
@@ -469,37 +485,39 @@ export const PARTS: Part[] = [
     action: {
       verb: 'cast',
       frames: [
-        // Gather: the hand slides up the staff, the sleeve lifting with it; a halo forms round the orb.
+        // Gather: the hand slides up, the staff tips forward, a halo forms round the orb.
         {
           ms: 220,
           runs: [
-            ...raisedSleeve,
-            ...staff(11),
-            [1, 6, '~'], [1, 11, '~'], [3, 5, '~'], [3, 12, '~'], [4, 7, '~'], [4, 10, '~'],
+            ...raisedSleeve(11, 6, 9),
+            ...staff(11, 6, 9),
+            ...shifted([[1, 6, '~'], [1, 11, '~'], [3, 5, '~'], [3, 12, '~'], [4, 7, '~'], [4, 10, '~']], -2),
           ],
         },
-        // Flare: the orb bursts into a star with a white-hot core.
+        // Flare: tipped well forward, the orb bursts into a star with a white-hot core.
         {
           ms: 160,
           runs: [
-            ...raisedSleeve,
-            ...staff(11),
-            [1, 8, '~~'],
-            [1, 5, 'v'], [1, 7, '~'], [1, 10, '~'], [1, 12, 'v'],
-            [2, 6, '~'], [2, 11, '~'],
-            [3, 4, 'v~'], [3, 12, '~v'],
-            [4, 6, '~'], [4, 11, '~'],
-            [5, 5, 'v'], [5, 12, 'v'],
+            ...raisedSleeve(11, 4, 11),
+            ...staff(11, 4, 11),
+            ...shifted([
+              [1, 8, '~~'],
+              [1, 5, 'v'], [1, 7, '~'], [1, 10, '~'], [1, 12, 'v'],
+              [2, 6, '~'], [2, 11, '~'],
+              [3, 5, '~'], [3, 12, '~v'],
+              [4, 6, '~'], [4, 11, '~'],
+              [5, 5, 'v'], [5, 12, 'v'],
+            ], -4),
           ],
         },
-        // Release: leaning in, sparks fly forward from the orb.
+        // Release: leaning in behind the tilted staff, sparks fly forward from the orb.
         {
           ms: 180,
           lean: 1,
           runs: [
-            ...raisedSleeve,
-            ...staff(11),
-            [3, 3, 'v'], [4, 2, '~v'], [5, 3, 'v~'], [6, 2, 'v'], [7, 4, 'v'], [2, 5, '~'],
+            ...raisedSleeve(11, 4, 11),
+            ...staff(11, 4, 11),
+            [2, 1, '~'], [4, 1, 'v'], [5, 2, 'v'], [6, 1, '~'], [7, 2, 'v'], [8, 1, 'v'],
           ],
         },
         // Settle: back at rest, a couple of embers still drifting.
